@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>机器节点管理系统</title>
+    <style>
+        /* 保持原有的CSS样式不变 */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Arial', sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #333;
+        }
+        
+        .nodes-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .node-card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            transition: transform 0.2s;
+        }
+        
+        .node-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .node-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .node-icon {
+            width: 40px;
+            height: 40px;
+            background-color: #e1f5fe;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            color: #0288d1;
+            font-size: 20px;
+        }
+        
+        .node-info {
+            flex: 1;
+        }
+        
+        .node-name {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .node-status {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+        }
+        
+        .status-online {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+        }
+        
+        .status-offline {
+            background-color: #ffebee;
+            color: #c62828;
+        }
+        
+        .node-details-btn, .node-actions-btn {
+            background-color: #0288d1;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            margin-left: 5px;
+        }
+        
+        .node-details-btn:hover, .node-actions-btn:hover {
+            background-color: #0277bd;
+        }
+        
+        .node-actions-btn {
+            background-color: #757575;
+        }
+        
+        .node-actions-btn:hover {
+            background-color: #616161;
+        }
+        
+        .node-details {
+            display: none;
+            margin-top: 15px;
+            border-top: 1px solid #eee;
+            padding-top: 15px;
+        }
+        
+        .detail-item {
+            margin-bottom: 10px;
+        }
+        
+        .detail-label {
+            font-weight: bold;
+            color: #666;
+            margin-bottom: 3px;
+        }
+        
+        .progress-container {
+            height: 10px;
+            background-color: #e0e0e0;
+            border-radius: 5px;
+            margin-top: 5px;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            border-radius: 5px;
+        }
+        
+        .cpu-progress {
+            background-color: #4caf50;
+        }
+        
+        .memory-progress {
+            background-color: #2196f3;
+        }
+        
+        .disk-progress {
+            background-color: #ff9800;
+        }
+        
+        .tasks-title {
+            margin: 15px 0 10px 0;
+            font-weight: bold;
+        }
+        
+        .task-list {
+            list-style-type: none;
+        }
+        
+        .task-item {
+            padding: 8px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .task-item:last-child {
+            border-bottom: none;
+        }
+        
+        .task-name {
+            font-weight: bold;
+        }
+        
+        .task-status {
+            font-size: 12px;
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+        
+        .status-running {
+            background-color: #e3f2fd;
+            color: #1565c0;
+        }
+        
+        .status-completed {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+        }
+        
+        .status-failed {
+            background-color: #ffebee;
+            color: #c62828;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+        
+        .error-message {
+            text-align: center;
+            padding: 20px;
+            color: #c62828;
+            background-color: #ffebee;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        /* 模态框样式 */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+        
+        .modal-content {
+            background-color: #fff;
+            margin: 15% auto;
+            padding: 20px;
+            border-radius: 8px;
+            width: 400px;
+            max-width: 90%;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .modal-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .close-btn {
+            font-size: 24px;
+            font-weight: bold;
+            color: #aaa;
+            cursor: pointer;
+            background: none;
+            border: none;
+        }
+        
+        .close-btn:hover {
+            color: #333;
+        }
+        
+        .modal-body {
+            margin-bottom: 20px;
+        }
+        
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        
+        .action-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.2s;
+        }
+        
+        .refresh-btn {
+            background-color: #0288d1;
+            color: white;
+        }
+        
+        .refresh-btn:hover {
+            background-color: #0277bd;
+        }
+        
+        .offline-btn {
+            background-color: #ff9800;
+            color: white;
+        }
+        
+        .offline-btn:hover {
+            background-color: #f57c00;
+        }
+        
+        .delete-btn {
+            background-color: #f44336;
+            color: white;
+        }
+        
+        .delete-btn:hover {
+            background-color: #d32f2f;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>机器节点管理系统</h1>
+        <div id="errorContainer" style="display: none;"></div>
+        <div class="nodes-container" id="nodesContainer">
+            <div class="loading">加载节点数据中...</div>
+        </div>
+    </div>
+
+    <!-- 操作模态框 -->
+    <div id="actionModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="modal-title" id="modalTitle">节点操作</span>
+                <button class="close-btn" id="closeModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p id="modalMessage">请选择要执行的操作</p>
+            </div>
+            <div class="modal-footer">
+                <button class="action-btn refresh-btn" id="refreshNode">刷新</button>
+                <button class="action-btn online-btn" id="onlineNode">上线</button>
+                <button class="action-btn offline-btn" id="offlineNode">下线</button>
+                <button class="action-btn delete-btn" id="deleteNode">删除</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 全局变量存储节点数据
+        let nodes = [];
+        let socket = null;
+        let currentSelectedNodeId = null;
+        
+        // API基础URL - 根据实际后端地址修改
+        const API_BASE_URL = 'http://localhost:3000/api';
+        const WS_BASE_URL = 'ws://localhost:3000/ws';
+        
+        // 显示错误信息
+        function showError(message) {
+            const errorContainer = document.getElementById('errorContainer');
+            errorContainer.style.display = 'block';
+            errorContainer.innerHTML = `<div class="error-message">${message}</div>`;
+        }
+        
+        // 隐藏错误信息
+        function hideError() {
+            document.getElementById('errorContainer').style.display = 'none';
+        }
+        
+        // 从API获取节点数据
+        async function fetchNodes() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/nodes`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                nodes = await response.json();
+                hideError();
+                renderNodes();
+                initializeWebSocket();
+            } catch (error) {
+                console.error('Error fetching nodes:', error);
+                showError(`无法获取节点数据: ${error.message}`);
+            }
+        }
+        
+        // 获取单个节点数据
+        async function fetchNode(nodeId) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/nodes/${nodeId}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const node = await response.json();
+                
+                // 更新节点数据
+                const index = nodes.findIndex(n => n.id === node.id);
+                if (index !== -1) {
+                    nodes[index] = node;
+                    renderNodes();
+                }
+                
+                return node;
+            } catch (error) {
+                console.error('Error fetching node:', error);
+                showError(`无法获取节点数据: ${error.message}`);
+                return null;
+            }
+        }
+        
+        // 下线节点
+        async function offlineNode(nodeId) {
+            try {
+                // 这里应该是调用API让节点下线
+                // 由于后端没有实现这个API，我们模拟一下
+                const node = nodes.find(n => n.id === nodeId);
+                if (node) {
+                    node.online = false;
+                    
+                    // 广播更新
+                    if (socket) {
+                        socket.send(JSON.stringify({
+                            type: "node_offline",
+                            payload: { id: nodeId }
+                        }));
+                    }
+                    
+                    renderNodes();
+                    return true;
+                }
+                return false;
+            } catch (error) {
+                console.error('Error offlining node:', error);
+                showError(`下线节点失败: ${error.message}`);
+                return false;
+            }
+        }
+        
+        // 删除节点
+        async function deleteNode(nodeId) {
+            try {
+                // 这里应该是调用API删除节点
+                // 由于后端没有实现这个API，我们模拟一下
+                const index = nodes.findIndex(n => n.id === nodeId);
+                if (index !== -1) {
+                    nodes.splice(index, 1);
+                    
+                    // 广播更新
+                    if (socket) {
+                        socket.send(JSON.stringify({
+                            type: "node_deleted",
+                            payload: { id: nodeId }
+                        }));
+                    }
+                    
+                    renderNodes();
+                    return true;
+                }
+                return false;
+            } catch (error) {
+                console.error('Error deleting node:', error);
+                showError(`删除节点失败: ${error.message}`);
+                return false;
+            }
+        }
+        
+        // 初始化WebSocket连接
+        function initializeWebSocket() {
+            if (socket) {
+                socket.close();
+            }
+            
+            socket = new WebSocket(`${WS_BASE_URL}/nodes`);
+            
+            socket.onopen = function(e) {
+                console.log('WebSocket连接已建立');
+            };
+            
+            socket.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+                console.log('收到实时更新:', data);
+                
+                // 更新节点数据
+                if (data.type === 'node_update') {
+                    const updatedNode = data.payload;
+                    const index = nodes.findIndex(n => n.id === updatedNode.id);
+                    
+                    if (index !== -1) {
+                        nodes[index] = updatedNode;
+                        renderNodes();
+                    }
+                } else if (data.type === 'node_offline') {
+                    const nodeId = data.payload.id;
+                    const index = nodes.findIndex(n => n.id === nodeId);
+                    
+                    if (index !== -1) {
+                        nodes[index].online = false;
+                        renderNodes();
+                    }
+                } else if (data.type === 'node_online') {
+                    const nodeId = data.payload.id;
+                    const index = nodes.findIndex(n => n.id === nodeId);
+                    
+                    if (index !== -1) {
+                        nodes[index].online = true;
+                        renderNodes();
+                    } else {
+                        // 新节点上线
+                        nodes.push(data.payload);
+                        renderNodes();
+                    }
+                } else if (data.type === 'node_deleted') {
+                    const nodeId = data.payload.id;
+                    const index = nodes.findIndex(n => n.id === nodeId);
+                    
+                    if (index !== -1) {
+                        nodes.splice(index, 1);
+                        renderNodes();
+                    }
+                }
+            };
+            
+            socket.onclose = function(event) {
+                if (event.wasClean) {
+                    console.log(`WebSocket连接关闭，代码=${event.code} 原因=${event.reason}`);
+                } else {
+                    console.log('WebSocket连接意外中断');
+                    // 尝试重新连接
+                    setTimeout(initializeWebSocket, 5000);
+                }
+            };
+            
+            socket.onerror = function(error) {
+                console.log('WebSocket错误:', error.message);
+                showError('实时连接中断，正在尝试重新连接...');
+            };
+        }
+        
+        // 渲染节点列表
+        function renderNodes() {
+            const container = document.getElementById('nodesContainer');
+            
+            if (nodes.length === 0) {
+                container.innerHTML = '<div class="loading">没有可用的节点数据</div>';
+                return;
+            }
+            
+            container.innerHTML = '';
+            
+            nodes.forEach(node => {
+                const nodeElement = document.createElement('div');
+                nodeElement.className = 'node-card';
+                nodeElement.innerHTML = `
+                    <div class="node-header">
+                        <div class="node-icon">💻</div>
+                        <div class="node-info">
+                            <div class="node-name">${node.name}</div>
+                            <span class="node-status ${node.online ? 'status-online' : 'status-offline'}">
+                                ${node.online ? '在线' : '离线'}
+                            </span>
+                        </div>
+                        <button class="node-details-btn" data-node-id="${node.id}">详情</button>
+                        <button class="node-actions-btn" data-node-id="${node.id}">操作</button>
+                    </div>
+                    <div class="node-details" id="details-${node.id}">
+                        <div class="detail-item">
+                            <div class="detail-label">IP地址</div>
+                            <div>${node.ip}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">CPU使用率 (${node.cpu.cores}核)</div>
+                            <div>${node.cpu.usage}%</div>
+                            <div class="progress-container">
+                                <div class="progress-bar cpu-progress" style="width: ${node.cpu.usage}%"></div>
+                            </div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">内存使用</div>
+                            <div>${node.memory.used}GB / ${node.memory.total}GB</div>
+                            <div class="progress-container">
+                                <div class="progress-bar memory-progress" style="width: ${(node.memory.used / node.memory.total) * 100}%"></div>
+                            </div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">磁盘使用</div>
+                            <div>${node.disk.used}GB / ${node.disk.total}GB</div>
+                            <div class="progress-container">
+                                <div class="progress-bar disk-progress" style="width: ${(node.disk.used / node.disk.total) * 100}%"></div>
+                            </div>
+                        </div>
+                        ${node.tasks && node.tasks.length > 0 ? `
+                            <div class="tasks-title">运行任务 (${node.tasks.length})</div>
+                            <ul class="task-list">
+                                ${node.tasks.map(task => `
+                                    <li class="task-item">
+                                        <span class="task-name">${task.name}</span>
+                                        <span class="task-status status-${task.status}">
+                                            ${task.status === 'running' ? '运行中' : 
+                                              task.status === 'completed' ? '已完成' : '失败'}
+                                        </span>
+                                    </li>
+                                `).join('')}
+                            </ul>
+                        ` : '<div class="tasks-title">没有运行中的任务</div>'}
+                    </div>
+                `;
+                container.appendChild(nodeElement);
+            });
+            
+            // 添加详情按钮点击事件
+            document.querySelectorAll('.node-details-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const nodeId = this.getAttribute('data-node-id');
+                    const detailsElement = document.getElementById(`details-${nodeId}`);
+                    
+                    if (detailsElement.style.display === 'block') {
+                        detailsElement.style.display = 'none';
+                        this.textContent = '详情';
+                    } else {
+                        detailsElement.style.display = 'block';
+                        this.textContent = '收起';
+                    }
+                });
+            });
+            
+            // 添加操作按钮点击事件
+            document.querySelectorAll('.node-actions-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const nodeId = parseInt(this.getAttribute('data-node-id'));
+                    currentSelectedNodeId = nodeId;
+                    
+                    // 显示模态框
+                    const modal = document.getElementById('actionModal');
+                    const modalTitle = document.getElementById('modalTitle');
+                    const node = nodes.find(n => n.id === nodeId);
+                    
+                    modalTitle.textContent = `节点操作 - ${node.name}`;
+                    modal.style.display = 'block';
+                });
+            });
+        }
+        
+        // 初始化模态框事件
+        function initModalEvents() {
+            const modal = document.getElementById('actionModal');
+            const closeBtn = document.getElementById('closeModal');
+            const refreshBtn = document.getElementById('refreshNode');
+            const offlineBtn = document.getElementById('offlineNode');
+            const deleteBtn = document.getElementById('deleteNode');
+            const modalMessage = document.getElementById('modalMessage');
+            
+            // 关闭模态框
+            closeBtn.addEventListener('click', function() {
+                modal.style.display = 'none';
+            });
+            
+            // 点击模态框外部关闭
+            window.addEventListener('click', function(event) {
+                if (event.target === modal) {
+                    modal.style.display = 'none';
+                }
+            });
+            
+            // 刷新节点
+            refreshBtn.addEventListener('click', async function() {
+                if (currentSelectedNodeId) {
+                    modalMessage.textContent = '正在刷新节点数据...';
+                    const node = await fetchNode(currentSelectedNodeId);
+                    if (node) {
+                        modalMessage.textContent = '节点数据已刷新';
+                        setTimeout(() => {
+                            modal.style.display = 'none';
+                        }, 1000);
+                    } else {
+                        modalMessage.textContent = '刷新节点数据失败';
+                    }
+                }
+            });
+            
+            // 下线节点
+            offlineBtn.addEventListener('click', async function() {
+                if (currentSelectedNodeId) {
+                    modalMessage.textContent = '正在下线节点...';
+                    const success = await offlineNode(currentSelectedNodeId);
+                    if (success) {
+                        modalMessage.textContent = '节点已下线';
+                        setTimeout(() => {
+                            modal.style.display = 'none';
+                        }, 1000);
+                    } else {
+                        modalMessage.textContent = '下线节点失败';
+                    }
+                }
+            });
+            
+            // 删除节点
+            deleteBtn.addEventListener('click', async function() {
+                if (currentSelectedNodeId) {
+                    modalMessage.textContent = '正在删除节点...';
+                    const success = await deleteNode(currentSelectedNodeId);
+                    if (success) {
+                        modalMessage.textContent = '节点已删除';
+                        setTimeout(() => {
+                            modal.style.display = 'none';
+                        }, 1000);
+                    } else {
+                        modalMessage.textContent = '删除节点失败';
+                    }
+                }
+            });
+        }
+        
+        // 页面加载时获取节点数据并初始化事件
+        document.addEventListener('DOMContentLoaded', function() {
+            fetchNodes();
+            initModalEvents();
+        });
+        
+        // 页面卸载时关闭WebSocket连接
+        window.addEventListener('beforeunload', function() {
+            if (socket) {
+                socket.close();
+            }
+        });
+    </script>
+</body>
+</html>
