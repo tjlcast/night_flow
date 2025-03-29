@@ -1,0 +1,1 @@
+{"root":["./src/app.tsx","./src/main.tsx","./src/vite-env.d.ts","./src/components/customnode.tsx","./src/components/nodepanel.tsx","./src/components/sidebar.tsx","./src/components/workfloweditor.tsx","./src/components/utils.ts","./src/store/workflowstore.ts"],"errors":true,"version":"5.8.2"}
