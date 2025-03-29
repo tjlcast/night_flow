@@ -1,318 +1,322 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>机器节点管理系统</title>
-        <style>
-            /* 保持原有的CSS样式不变 */
-            * {
-                box-sizing: border-box;
-                margin: 0;
-                padding: 0;
-                font-family: 'Arial', sans-serif;
-            }
-            
-            body {
-                background-color: #f5f7fa;
-                padding: 20px;
-            }
-            
-            .container {
-                max-width: 1200px;
-                margin: 0 auto;
-            }
-            
-            h1 {
-                text-align: center;
-                margin-bottom: 30px;
-                color: #333;
-            }
-            
-            .nodes-container {
-                display: grid;
-                grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-                gap: 20px;
-            }
-            
-            .node-card {
-                background-color: white;
-                border-radius: 8px;
-                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-                padding: 20px;
-                transition: transform 0.2s;
-            }
-            
-            .node-card:hover {
-                transform: translateY(-5px);
-            }
-            
-            .node-header {
-                display: flex;
-                align-items: center;
-                margin-bottom: 15px;
-            }
-            
-            .node-icon {
-                width: 40px;
-                height: 40px;
-                background-color: #e1f5fe;
-                border-radius: 50%;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                margin-right: 15px;
-                color: #0288d1;
-                font-size: 20px;
-            }
-            
-            .node-info {
-                flex: 1;
-            }
-            
-            .node-name {
-                font-weight: bold;
-                margin-bottom: 5px;
-            }
-            
-            .node-status {
-                display: inline-block;
-                padding: 3px 8px;
-                border-radius: 12px;
-                font-size: 12px;
-            }
-            
-            .status-online {
-                background-color: #e8f5e9;
-                color: #2e7d32;
-            }
-            
-            .status-offline {
-                background-color: #ffebee;
-                color: #c62828;
-            }
-            
-            .node-details-btn, .node-actions-btn {
-                background-color: #0288d1;
-                color: white;
-                border: none;
-                padding: 8px 15px;
-                border-radius: 4px;
-                cursor: pointer;
-                transition: background-color 0.2s;
-                margin-left: 5px;
-            }
-            
-            .node-details-btn:hover, .node-actions-btn:hover {
-                background-color: #0277bd;
-            }
-            
-            .node-actions-btn {
-                background-color: #757575;
-            }
-            
-            .node-actions-btn:hover {
-                background-color: #616161;
-            }
-            
-            .node-details {
-                display: none;
-                margin-top: 15px;
-                border-top: 1px solid #eee;
-                padding-top: 15px;
-            }
-            
-            .detail-item {
-                margin-bottom: 10px;
-            }
-            
-            .detail-label {
-                font-weight: bold;
-                color: #666;
-                margin-bottom: 3px;
-            }
-            
-            .progress-container {
-                height: 10px;
-                background-color: #e0e0e0;
-                border-radius: 5px;
-                margin-top: 5px;
-            }
-            
-            .progress-bar {
-                height: 100%;
-                border-radius: 5px;
-            }
-            
-            .cpu-progress {
-                background-color: #4caf50;
-            }
-            
-            .memory-progress {
-                background-color: #2196f3;
-            }
-            
-            .disk-progress {
-                background-color: #ff9800;
-            }
-            
-            .tasks-title {
-                margin: 15px 0 10px 0;
-                font-weight: bold;
-            }
-            
-            .task-list {
-                list-style-type: none;
-            }
-            
-            .task-item {
-                padding: 8px;
-                border-bottom: 1px solid #eee;
-                display: flex;
-                justify-content: space-between;
-            }
-            
-            .task-item:last-child {
-                border-bottom: none;
-            }
-            
-            .task-name {
-                font-weight: bold;
-            }
-            
-            .task-status {
-                font-size: 12px;
-                padding: 2px 6px;
-                border-radius: 3px;
-            }
-            
-            .status-running {
-                background-color: #e3f2fd;
-                color: #1565c0;
-            }
-            
-            .status-completed {
-                background-color: #e8f5e9;
-                color: #2e7d32;
-            }
-            
-            .status-failed {
-                background-color: #ffebee;
-                color: #c62828;
-            }
-            
-            .loading {
-                text-align: center;
-                padding: 20px;
-                color: #666;
-            }
-            
-            .error-message {
-                text-align: center;
-                padding: 20px;
-                color: #c62828;
-                background-color: #ffebee;
-                border-radius: 8px;
-                margin-bottom: 20px;
-            }
-            
-            /* 模态框样式 */
-            .modal {
-                display: none;
-                position: fixed;
-                z-index: 1000;
-                left: 0;
-                top: 0;
-                width: 100%;
-                height: 100%;
-                background-color: rgba(0, 0, 0, 0.5);
-            }
-            
-            .modal-content {
-                background-color: #fff;
-                margin: 15% auto;
-                padding: 20px;
-                border-radius: 8px;
-                width: 400px;
-                max-width: 90%;
-                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-            }
-            
-            .modal-header {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                margin-bottom: 20px;
-                padding-bottom: 10px;
-                border-bottom: 1px solid #eee;
-            }
-            
-            .modal-title {
-                font-size: 18px;
-                font-weight: bold;
-                color: #333;
-            }
-            
-            .close-btn {
-                font-size: 24px;
-                font-weight: bold;
-                color: #aaa;
-                cursor: pointer;
-                background: none;
-                border: none;
-            }
-            
-            .close-btn:hover {
-                color: #333;
-            }
-            
-            .modal-body {
-                margin-bottom: 20px;
-            }
-            
-            .modal-footer {
-                display: flex;
-                justify-content: flex-end;
-                gap: 10px;
-            }
-            
-            .action-btn {
-                padding: 8px 16px;
-                border: none;
-                border-radius: 4px;
-                cursor: pointer;
-                font-weight: bold;
-                transition: background-color 0.2s;
-            }
-            
-            .refresh-btn {
-                background-color: #0288d1;
-                color: white;
-            }
-            
-            .refresh-btn:hover {
-                background-color: #0277bd;
-            }
-            
-            .offline-btn {
-                background-color: #ff9800;
-                color: white;
-            }
-            
-            .offline-btn:hover {
-                background-color: #f57c00;
-            }
-            
-            .delete-btn {
-                background-color: #f44336;
-                color: white;
-            }
-            
-            .delete-btn:hover {
-                background-color: #d32f2f;
-            }
-        </style>
-    </head>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>机器节点管理系统</title>
+    <style>
+        /* 保持原有的CSS样式不变 */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Arial', sans-serif;
+        }
+
+        body {
+            background-color: #f5f7fa;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #333;
+        }
+
+        .nodes-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .node-card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            transition: transform 0.2s;
+        }
+
+        .node-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .node-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .node-icon {
+            width: 40px;
+            height: 40px;
+            background-color: #e1f5fe;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            color: #0288d1;
+            font-size: 20px;
+        }
+
+        .node-info {
+            flex: 1;
+        }
+
+        .node-name {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .node-status {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+        }
+
+        .status-online {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .status-offline {
+            background-color: #ffebee;
+            color: #c62828;
+        }
+
+        .node-details-btn,
+        .node-actions-btn {
+            background-color: #0288d1;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            margin-left: 5px;
+        }
+
+        .node-details-btn:hover,
+        .node-actions-btn:hover {
+            background-color: #0277bd;
+        }
+
+        .node-actions-btn {
+            background-color: #757575;
+        }
+
+        .node-actions-btn:hover {
+            background-color: #616161;
+        }
+
+        .node-details {
+            display: none;
+            margin-top: 15px;
+            border-top: 1px solid #eee;
+            padding-top: 15px;
+        }
+
+        .detail-item {
+            margin-bottom: 10px;
+        }
+
+        .detail-label {
+            font-weight: bold;
+            color: #666;
+            margin-bottom: 3px;
+        }
+
+        .progress-container {
+            height: 10px;
+            background-color: #e0e0e0;
+            border-radius: 5px;
+            margin-top: 5px;
+        }
+
+        .progress-bar {
+            height: 100%;
+            border-radius: 5px;
+        }
+
+        .cpu-progress {
+            background-color: #4caf50;
+        }
+
+        .memory-progress {
+            background-color: #2196f3;
+        }
+
+        .disk-progress {
+            background-color: #ff9800;
+        }
+
+        .tasks-title {
+            margin: 15px 0 10px 0;
+            font-weight: bold;
+        }
+
+        .task-list {
+            list-style-type: none;
+        }
+
+        .task-item {
+            padding: 8px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .task-item:last-child {
+            border-bottom: none;
+        }
+
+        .task-name {
+            font-weight: bold;
+        }
+
+        .task-status {
+            font-size: 12px;
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+
+        .status-running {
+            background-color: #e3f2fd;
+            color: #1565c0;
+        }
+
+        .status-completed {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .status-failed {
+            background-color: #ffebee;
+            color: #c62828;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+
+        .error-message {
+            text-align: center;
+            padding: 20px;
+            color: #c62828;
+            background-color: #ffebee;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        /* 模态框样式 */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-content {
+            background-color: #fff;
+            margin: 15% auto;
+            padding: 20px;
+            border-radius: 8px;
+            width: 400px;
+            max-width: 90%;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .close-btn {
+            font-size: 24px;
+            font-weight: bold;
+            color: #aaa;
+            cursor: pointer;
+            background: none;
+            border: none;
+        }
+
+        .close-btn:hover {
+            color: #333;
+        }
+
+        .modal-body {
+            margin-bottom: 20px;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .action-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.2s;
+        }
+
+        .refresh-btn {
+            background-color: #0288d1;
+            color: white;
+        }
+
+        .refresh-btn:hover {
+            background-color: #0277bd;
+        }
+
+        .offline-btn {
+            background-color: #ff9800;
+            color: white;
+        }
+
+        .offline-btn:hover {
+            background-color: #f57c00;
+        }
+
+        .delete-btn {
+            background-color: #f44336;
+            color: white;
+        }
+
+        .delete-btn:hover {
+            background-color: #d32f2f;
+        }
+    </style>
+</head>
+
 <body>
     <div class="container">
         <h1>机器节点管理系统</h1>
@@ -352,23 +356,23 @@
         let nodes = [];
         let socket = null;
         let currentSelectedNodeId = null;
-        
+
         // API基础URL - 根据实际后端地址修改
         const API_BASE_URL = 'http://localhost:3000/api';
         const WS_BASE_URL = 'ws://localhost:3000/ws';
-        
+
         // 显示错误信息
         function showError(message) {
             const errorContainer = document.getElementById('errorContainer');
             errorContainer.style.display = 'block';
             errorContainer.innerHTML = `<div class="error-message">${message}</div>`;
         }
-        
+
         // 隐藏错误信息
         function hideError() {
             document.getElementById('errorContainer').style.display = 'none';
         }
-        
+
         // 从API获取节点数据
         async function fetchNodes() {
             try {
@@ -385,7 +389,7 @@
                 showError(`无法获取节点数据: ${error.message}`);
             }
         }
-        
+
         // 获取单个节点数据
         async function fetchNode(nodeId) {
             try {
@@ -394,14 +398,14 @@
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 const node = await response.json();
-                
+
                 // 更新节点数据
                 const index = nodes.findIndex(n => n.id === node.id);
                 if (index !== -1) {
                     nodes[index] = node;
                     renderNodes();
                 }
-                
+
                 return node;
             } catch (error) {
                 console.error('Error fetching node:', error);
@@ -409,18 +413,18 @@
                 return null;
             }
         }
-        
+
         // 下线节点
         async function offlineNode(nodeId) {
             try {
                 const response = await fetch(`${API_BASE_URL}/nodes/${nodeId}/offline`, {
                     method: 'PUT'
                 });
-                
+
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
-                
+
                 const result = await response.json();
                 if (result.success) {
                     // WebSocket会自动更新节点状态，所以这里不需要手动更新
@@ -433,18 +437,18 @@
                 return false;
             }
         }
-        
+
         // 上线节点
         async function onlineNode(nodeId) {
             try {
                 const response = await fetch(`${API_BASE_URL}/nodes/${nodeId}/online`, {
                     method: 'PUT'
                 });
-                
+
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
-                
+
                 const result = await response.json();
                 if (result.success) {
                     // WebSocket会自动更新节点状态，所以这里不需要手动更新
@@ -457,18 +461,18 @@
                 return false;
             }
         }
-        
+
         // 删除节点
         async function deleteNode(nodeId) {
             try {
                 const response = await fetch(`${API_BASE_URL}/nodes/${nodeId}`, {
                     method: 'DELETE'
                 });
-                
+
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
-                
+
                 const result = await response.json();
                 if (result.success) {
                     // WebSocket会自动更新节点列表，所以这里不需要手动更新
@@ -481,36 +485,38 @@
                 return false;
             }
         }
-        
+
         // 初始化WebSocket连接
         function initializeWebSocket() {
             if (socket) {
                 socket.close();
             }
-            
+
             socket = new WebSocket(`${WS_BASE_URL}/nodes`);
-            
-            socket.onopen = function(e) {
+
+            socket.onopen = function (e) {
                 console.log('WebSocket连接已建立');
             };
-            
-            socket.onmessage = function(event) {
+
+            socket.onmessage = function (event) {
                 const data = JSON.parse(event.data);
                 console.log('收到实时更新:', data);
-                
+
                 // 更新节点数据
                 if (data.type === 'node_update') {
                     const updatedNode = data.payload;
                     const index = nodes.findIndex(n => n.id === updatedNode.id);
-                    
+
                     if (index !== -1) {
                         nodes[index] = updatedNode;
-                        renderNodes();
+                    } else {
+                        nodes.push(updatedNode);
                     }
+                    renderNodes();
                 } else if (data.type === 'node_offline') {
                     const nodeId = data.payload.id;
                     const index = nodes.findIndex(n => n.id === nodeId);
-                    
+
                     if (index !== -1) {
                         nodes[index].online = false;
                         renderNodes();
@@ -518,7 +524,7 @@
                 } else if (data.type === 'node_online') {
                     const nodeId = data.payload.id;
                     const index = nodes.findIndex(n => n.id === nodeId);
-                    
+
                     if (index !== -1) {
                         nodes[index].online = true;
                         renderNodes();
@@ -530,15 +536,15 @@
                 } else if (data.type === 'node_deleted') {
                     const nodeId = data.payload.id;
                     const index = nodes.findIndex(n => n.id === nodeId);
-                    
+
                     if (index !== -1) {
                         nodes.splice(index, 1);
                         renderNodes();
                     }
                 }
             };
-            
-            socket.onclose = function(event) {
+
+            socket.onclose = function (event) {
                 if (event.wasClean) {
                     console.log(`WebSocket连接关闭，代码=${event.code} 原因=${event.reason}`);
                 } else {
@@ -547,24 +553,24 @@
                     setTimeout(initializeWebSocket, 5000);
                 }
             };
-            
-            socket.onerror = function(error) {
+
+            socket.onerror = function (error) {
                 console.log('WebSocket错误:', error.message);
                 showError('实时连接中断，正在尝试重新连接...');
             };
         }
-        
+
         // 渲染节点列表
         function renderNodes() {
             const container = document.getElementById('nodesContainer');
-            
+
             if (nodes.length === 0) {
                 container.innerHTML = '<div class="loading">没有可用的节点数据</div>';
                 return;
             }
-            
+
             container.innerHTML = '';
-            
+
             nodes.forEach(node => {
                 const nodeElement = document.createElement('div');
                 nodeElement.className = 'node-card';
@@ -613,8 +619,8 @@
                                     <li class="task-item">
                                         <span class="task-name">${task.name}</span>
                                         <span class="task-status status-${task.status}">
-                                            ${task.status === 'running' ? '运行中' : 
-                                              task.status === 'completed' ? '已完成' : '失败'}
+                                            ${task.status === 'running' ? '运行中' :
+                        task.status === 'completed' ? '已完成' : '失败'}
                                         </span>
                                     </li>
                                 `).join('')}
@@ -624,13 +630,13 @@
                 `;
                 container.appendChild(nodeElement);
             });
-            
+
             // 添加详情按钮点击事件
             document.querySelectorAll('.node-details-btn').forEach(button => {
-                button.addEventListener('click', function() {
+                button.addEventListener('click', function () {
                     const nodeId = this.getAttribute('data-node-id');
                     const detailsElement = document.getElementById(`details-${nodeId}`);
-                    
+
                     if (detailsElement.style.display === 'block') {
                         detailsElement.style.display = 'none';
                         this.textContent = '详情';
@@ -640,26 +646,26 @@
                     }
                 });
             });
-            
+
             // 添加操作按钮点击事件
             document.querySelectorAll('.node-actions-btn').forEach(button => {
-                button.addEventListener('click', function() {
+                button.addEventListener('click', function () {
                     const nodeId = parseInt(this.getAttribute('data-node-id'));
                     currentSelectedNodeId = nodeId;
-                    
+
                     // 显示模态框
                     const modal = document.getElementById('actionModal');
                     const modalTitle = document.getElementById('modalTitle');
                     const node = nodes.find(n => n.id === nodeId);
-                    
+
                     modalTitle.textContent = `节点操作 - ${node.name}`;
                     modal.style.display = 'block';
                 });
             });
-            
+
             // 添加上线按钮点击事件
             document.querySelectorAll('.node-online-btn').forEach(button => {
-                button.addEventListener('click', async function() {
+                button.addEventListener('click', async function () {
                     const nodeId = parseInt(this.getAttribute('data-node-id'));
                     const success = await onlineNode(nodeId);
                     if (success) {
@@ -669,10 +675,10 @@
                     }
                 });
             });
-            
+
             // 添加下线按钮点击事件
             document.querySelectorAll('.node-offline-btn').forEach(button => {
-                button.addEventListener('click', async function() {
+                button.addEventListener('click', async function () {
                     const nodeId = parseInt(this.getAttribute('data-node-id'));
                     const success = await offlineNode(nodeId);
                     if (success) {
@@ -683,7 +689,7 @@
                 });
             });
         }
-        
+
         // 初始化模态框事件
         function initModalEvents() {
             const modal = document.getElementById('actionModal');
@@ -693,21 +699,21 @@
             const offlineBtn = document.getElementById('offlineNode');
             const deleteBtn = document.getElementById('deleteNode');
             const modalMessage = document.getElementById('modalMessage');
-            
+
             // 关闭模态框
-            closeBtn.addEventListener('click', function() {
+            closeBtn.addEventListener('click', function () {
                 modal.style.display = 'none';
             });
-            
+
             // 点击模态框外部关闭
-            window.addEventListener('click', function(event) {
+            window.addEventListener('click', function (event) {
                 if (event.target === modal) {
                     modal.style.display = 'none';
                 }
             });
-            
+
             // 刷新节点
-            refreshBtn.addEventListener('click', async function() {
+            refreshBtn.addEventListener('click', async function () {
                 if (currentSelectedNodeId) {
                     modalMessage.textContent = '正在刷新节点数据...';
                     const node = await fetchNode(currentSelectedNodeId);
@@ -723,7 +729,7 @@
             });
 
             // 上线节点
-            onlineBtn.addEventListener('click', async function() {
+            onlineBtn.addEventListener('click', async function () {
                 if (currentSelectedNodeId) {
                     modalMessage.textContent = '正在上线节点...';
                     const success = await onlineNode(currentSelectedNodeId);
@@ -737,9 +743,9 @@
                     }
                 }
             });
-            
+
             // 下线节点
-            offlineBtn.addEventListener('click', async function() {
+            offlineBtn.addEventListener('click', async function () {
                 if (currentSelectedNodeId) {
                     modalMessage.textContent = '正在下线节点...';
                     const success = await offlineNode(currentSelectedNodeId);
@@ -753,9 +759,9 @@
                     }
                 }
             });
-            
+
             // 删除节点
-            deleteBtn.addEventListener('click', async function() {
+            deleteBtn.addEventListener('click', async function () {
                 if (currentSelectedNodeId) {
                     modalMessage.textContent = '正在删除节点...';
                     const success = await deleteNode(currentSelectedNodeId);
@@ -770,19 +776,20 @@
                 }
             });
         }
-        
+
         // 页面加载时获取节点数据并初始化事件
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             fetchNodes();
             initModalEvents();
         });
-        
+
         // 页面卸载时关闭WebSocket连接
-        window.addEventListener('beforeunload', function() {
+        window.addEventListener('beforeunload', function () {
             if (socket) {
                 socket.close();
             }
         });
     </script>
 </body>
+
 </html>

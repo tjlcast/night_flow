@@ -23,3 +23,8 @@ curl -X PUT http://localhost:3000/api/nodes/1/online
 
 curl -X DELETE http://localhost:3000/api/nodes/1
 
+
+### 5. Node hearbeat
+
+curl -X POST http://localhost:3000/api/v1/workers/5/heartbeat
+
