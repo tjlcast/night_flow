@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useCallback, useEffect } from "react";
 import ReactFlow, {
   ReactFlowProvider,
   Background,
@@ -10,45 +10,61 @@ import ReactFlow, {
   NodeTypes,
   Connection,
   OnSelectionChangeParams,
-} from 'reactflow';
-import 'reactflow/dist/style.css';
+} from "reactflow";
+import "reactflow/dist/style.css";
 
-import Sidebar from './Sidebar';
-import NodePanel from './NodePanel';
-import CustomNode from './CustomNode';
-import { nanoid } from './utils';
-import { useWorkflowStore } from '../store/workflowStore';
+import Sidebar from "./Sidebar";
+import NodePanel from "./NodePanel";
+import CustomNode from "./CustomNode";
+import { nanoid } from "./utils";
+import { useWorkflowStore } from "../store/workflowStore";
 
 // Define the node types for the workflow
 const nodeTypes: NodeTypes = {
   customNode: CustomNode,
 };
 
-export default function WorkflowEditor() {
+interface WorkflowEditorProps {
+  isDebugModel: boolean;
+}
+
+export default function WorkflowEditor({ isDebugModel }: WorkflowEditorProps) {
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
   const [reactFlowInstance, setReactFlowInstance] = useState<any>(null);
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
-  
+
   // Get state and actions from store
-  const { 
-    nodes, 
-    edges, 
-    setNodes, 
-    setEdges, 
-    onNodesChange, 
+  const {
+    nodes,
+    edges,
+    setNodes,
+    setEdges,
+    onNodesChange,
     onEdgesChange,
     addNode,
     removeNode,
-    updateNode
+    updateNode,
   } = useWorkflowStore();
-  
-  const onConnect = useCallback((params: Connection) => {
-    setEdges((eds) => addEdge({ ...params, animated: true, style: { stroke: '#555', strokeWidth: 2 } }, eds));
-  }, [setEdges]);
+
+  const onConnect = useCallback(
+    (params: Connection) => {
+      setEdges((eds) =>
+        addEdge(
+          {
+            ...params,
+            animated: true,
+            style: { stroke: "#555", strokeWidth: 2 },
+          },
+          eds
+        )
+      );
+    },
+    [setEdges]
+  );
 
   const onDragOver = useCallback((event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
-    event.dataTransfer.dropEffect = 'move';
+    event.dataTransfer.dropEffect = "move";
   }, []);
 
   const onDrop = useCallback(
@@ -56,10 +72,15 @@ export default function WorkflowEditor() {
       event.preventDefault();
 
       const reactFlowBounds = reactFlowWrapper.current?.getBoundingClientRect();
-      const type = event.dataTransfer.getData('application/reactflow');
-      const name = event.dataTransfer.getData('application/nodename');
-      
-      if (typeof type === 'undefined' || !type || !reactFlowBounds || !reactFlowInstance) {
+      const type = event.dataTransfer.getData("application/reactflow");
+      const name = event.dataTransfer.getData("application/nodename");
+
+      if (
+        typeof type === "undefined" ||
+        !type ||
+        !reactFlowBounds ||
+        !reactFlowInstance
+      ) {
         return;
       }
 
@@ -68,23 +89,23 @@ export default function WorkflowEditor() {
         y: event.clientY - reactFlowBounds.top,
       });
 
-      const newNodeData: any = { 
-        label: name, 
-        type, 
-        action: '未配置', 
-        description: '' 
+      const newNodeData: any = {
+        label: name,
+        type,
+        action: "未配置",
+        description: "",
       };
 
       // Add specific fields based on node type
-      if (type === 'conditional') {
-        newNodeData.condition = '';
-      } else if (type === 'fanIn' || type === 'fanOut') {
+      if (type === "conditional") {
+        newNodeData.condition = "";
+      } else if (type === "fanIn" || type === "fanOut") {
         newNodeData.parallelPaths = 3; // Default number of parallel paths
       }
 
       const newNode = {
         id: `node-${nanoid()}`,
-        type: 'customNode',
+        type: "customNode",
         position,
         data: newNodeData,
       };
@@ -93,37 +114,46 @@ export default function WorkflowEditor() {
     },
     [reactFlowInstance, addNode]
   );
-  
+
   const onNodeClick = useCallback((_: React.MouseEvent, node: Node) => {
     setSelectedNode(node);
   }, []);
 
-  const onSelectionChange = useCallback(({ nodes }: OnSelectionChangeParams) => {
-    if (nodes.length === 1) {
-      setSelectedNode(nodes[0]);
-    } else if (nodes.length === 0 && selectedNode) {
-      setSelectedNode(null);
-    }
-  }, [selectedNode]);
+  const onSelectionChange = useCallback(
+    ({ nodes }: OnSelectionChangeParams) => {
+      if (nodes.length === 1) {
+        setSelectedNode(nodes[0]);
+      } else if (nodes.length === 0 && selectedNode) {
+        setSelectedNode(null);
+      }
+    },
+    [selectedNode]
+  );
 
   const onPaneClick = useCallback(() => {
     setSelectedNode(null);
   }, []);
 
-  const updateNodeData = useCallback((nodeId: string, newData: any) => {
-    updateNode(nodeId, newData);
-  }, [updateNode]);
+  const updateNodeData = useCallback(
+    (nodeId: string, newData: any) => {
+      updateNode(nodeId, newData);
+    },
+    [updateNode]
+  );
 
-  const deleteNode = useCallback((nodeId: string) => {
-    removeNode(nodeId);
-    if (selectedNode && selectedNode.id === nodeId) {
-      setSelectedNode(null);
-    }
-  }, [selectedNode, removeNode]);
+  const deleteNode = useCallback(
+    (nodeId: string) => {
+      removeNode(nodeId);
+      if (selectedNode && selectedNode.id === nodeId) {
+        setSelectedNode(null);
+      }
+    },
+    [selectedNode, removeNode]
+  );
 
   return (
     <div className="flex h-full">
-      <Sidebar />
+      {!isDebugModel && <Sidebar />}
       <div className="flex-1 flex">
         <div className="flex-1 h-full" ref={reactFlowWrapper}>
           <ReactFlowProvider>
@@ -151,7 +181,8 @@ export default function WorkflowEditor() {
           </ReactFlowProvider>
         </div>
         {selectedNode && (
-          <NodePanel 
+          <NodePanel
+            isDebugModel={isDebugModel}
             node={selectedNode}
             updateNodeData={updateNodeData}
             deleteNode={deleteNode}

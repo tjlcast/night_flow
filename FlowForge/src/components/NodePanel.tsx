@@ -1,26 +1,41 @@
-import { useState, useEffect } from 'react';
-import { Node } from 'reactflow';
-import { Trash2, X } from 'lucide-react';
+import { useState, useEffect } from "react";
+import { Node } from "reactflow";
+import { Trash2, X } from "lucide-react";
 
 interface NodePanelProps {
+  isDebugModel: boolean;
   node: Node;
   updateNodeData: (nodeId: string, newData: any) => void;
   deleteNode: (nodeId: string) => void;
   onClose: () => void;
 }
 
-export default function NodePanel({ node, updateNodeData, deleteNode, onClose }: NodePanelProps) {
+export default function NodePanel({
+  isDebugModel,
+  node,
+  updateNodeData,
+  deleteNode,
+  onClose,
+}: NodePanelProps) {
   const [localLabel, setLocalLabel] = useState(node.data.label);
-  const [localAction, setLocalAction] = useState(node.data.action || '未配置');
-  const [localDescription, setLocalDescription] = useState(node.data.description || '');
-  const [localCondition, setLocalCondition] = useState(node.data.condition || '');
-  const [localParallelPaths, setLocalParallelPaths] = useState(node.data.parallelPaths || 3);
+  const [localAction, setLocalAction] = useState(node.data.action || "未配置");
+  const [localInput, setLocalInput] = useState(node.data?.runtime?.input || "No input");
+  const [localOutput, setLocalOutput] = useState(node.data?.runtime?.input || "No output");
+  const [localDescription, setLocalDescription] = useState(
+    node.data.description || ""
+  );
+  const [localCondition, setLocalCondition] = useState(
+    node.data.condition || ""
+  );
+  const [localParallelPaths, setLocalParallelPaths] = useState(
+    node.data.parallelPaths || 3
+  );
 
   useEffect(() => {
     setLocalLabel(node.data.label);
-    setLocalAction(node.data.action || '未配置');
-    setLocalDescription(node.data.description || '');
-    setLocalCondition(node.data.condition || '');
+    setLocalAction(node.data.action || "未配置");
+    setLocalDescription(node.data.description || "");
+    setLocalCondition(node.data.condition || "");
     setLocalParallelPaths(node.data.parallelPaths || 3);
   }, [node]);
 
@@ -28,17 +43,17 @@ export default function NodePanel({ node, updateNodeData, deleteNode, onClose }:
     const updatedData: any = {
       label: localLabel,
       action: localAction,
-      description: localDescription
+      description: localDescription,
     };
-    
-    if (node.data.type === 'conditional') {
+
+    if (node.data.type === "conditional") {
       updatedData.condition = localCondition;
     }
-    
-    if (node.data.type === 'fanIn' || node.data.type === 'fanOut') {
+
+    if (node.data.type === "fanIn" || node.data.type === "fanOut") {
       updatedData.parallelPaths = parseInt(localParallelPaths.toString(), 10);
     }
-    
+
     updateNodeData(node.id, updatedData);
   };
 
@@ -50,14 +65,14 @@ export default function NodePanel({ node, updateNodeData, deleteNode, onClose }:
     <div className="w-80 border-l border-gray-200 bg-white overflow-auto">
       <div className="flex items-center justify-between p-4 border-b border-gray-200">
         <h3 className="text-lg font-medium text-gray-800">节点详情</h3>
-        <button 
+        <button
           onClick={onClose}
           className="p-1 rounded-md text-gray-500 hover:bg-gray-100 hover:text-gray-700"
         >
           <X size={18} />
         </button>
       </div>
-      
+
       <div className="p-4 space-y-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -71,7 +86,7 @@ export default function NodePanel({ node, updateNodeData, deleteNode, onClose }:
             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
           />
         </div>
-        
+
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
             节点类型
@@ -80,8 +95,8 @@ export default function NodePanel({ node, updateNodeData, deleteNode, onClose }:
             {node.data.type}
           </div>
         </div>
-        
-        {node.data.type === 'conditional' && (
+
+        {node.data.type === "conditional" && (
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               条件表达式
@@ -96,8 +111,8 @@ export default function NodePanel({ node, updateNodeData, deleteNode, onClose }:
             />
           </div>
         )}
-        
-        {(node.data.type === 'fanIn' || node.data.type === 'fanOut') && (
+
+        {(node.data.type === "fanIn" || node.data.type === "fanOut") && (
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               并行路径数量
@@ -107,16 +122,19 @@ export default function NodePanel({ node, updateNodeData, deleteNode, onClose }:
               min="2"
               max="6"
               value={localParallelPaths}
-              onChange={(e) => setLocalParallelPaths(parseInt(e.target.value, 10))}
+              onChange={(e) =>
+                setLocalParallelPaths(parseInt(e.target.value, 10))
+              }
               onBlur={handleSave}
               className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
             />
             <p className="mt-1 text-xs text-gray-500">
-              {node.data.type === 'fanIn' ? '输出路径数量' : '输入路径数量'} (2-6)
+              {node.data.type === "fanIn" ? "输出路径数量" : "输入路径数量"}{" "}
+              (2-6)
             </p>
           </div>
         )}
-        
+
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
             动作配置
@@ -129,7 +147,7 @@ export default function NodePanel({ node, updateNodeData, deleteNode, onClose }:
             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
           />
         </div>
-        
+
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
             描述
@@ -142,16 +160,48 @@ export default function NodePanel({ node, updateNodeData, deleteNode, onClose }:
             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
           />
         </div>
-        
-        <div className="pt-2">
-          <button
-            onClick={handleDelete}
-            className="w-full flex items-center justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-          >
-            <Trash2 size={16} className="mr-2" />
-            删除节点
-          </button>
-        </div>
+
+        {!isDebugModel && (
+          <div className="pt-2">
+            <button
+              onClick={handleDelete}
+              className="w-full flex items-center justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+            >
+              <Trash2 size={16} className="mr-2" />
+              删除节点
+            </button>
+          </div>
+        )}
+
+        {isDebugModel && (
+          <div>
+            <hr className="my-4" />
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Input
+              </label>
+              <textarea
+                rows={4}
+                value={localInput}
+                onChange={(e) => setLocalDescription(e.target.value)}
+                onBlur={handleSave}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Output
+              </label>
+              <textarea
+                rows={4}
+                value={localOutput}
+                onChange={(e) => setLocalDescription(e.target.value)}
+                onBlur={handleSave}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              />
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
