@@ -28,3 +28,8 @@ curl -X DELETE http://localhost:3000/api/nodes/1
 
 curl -X POST http://localhost:3000/api/v1/workers/5/heartbeat
 
+
+### 6. Workflow server
+
+curl -X GET http://localhost:8000/
+

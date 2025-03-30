@@ -1,13 +1,17 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import WorkflowEditor from "./components/WorkflowEditor";
 import { Download, Bug, Rocket } from "lucide-react";
 import "./index.css";
 import { useWorkflowStore } from "./store/workflowStore";
+import { WorkflowWebSocket } from "./utils/websocket";
 
 function App() {
+  const [currentWorkflowId, setCurrentWorkflowId] = useState<string>("abc123");
+  const [socketInstance, setSocketInstance] =
+    useState<WorkflowWebSocket | null>(null);
   const [isDebugModel, setIsDebugModel] = useState(false);
   const [workflowName, setWorkflowName] = useState<string>("Untitled Workflow");
-  const { nodes, edges, updateNode, updateNodeStyle} = useWorkflowStore();
+  const { nodes, edges, updateNode, updateNodeStyle } = useWorkflowStore();
 
   const handleExportWorkflow = () => {
     // Create workflow data object
@@ -36,6 +40,61 @@ function App() {
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
   };
+
+  const handleRuntimeMessage = (message: {
+    isSuccess: boolean;
+    nodeId: string;
+    output: any;
+    error?: string;
+  }) => {
+    if (message.isSuccess) {
+      updateNodeStyle(message.nodeId, { border: "2px solid #10B981" });
+    } else {
+      updateNodeStyle(message.nodeId, { border: "2px solid #EF4444" });
+      console.error(`Node ${message.nodeId} error:`, message.error);
+    }
+  };
+
+  const handleRunWorkflow = () => {
+    // 关闭现有连接
+    socketInstance?.close();
+
+    // 创建新连接
+    const ws = new WorkflowWebSocket(currentWorkflowId);
+    ws.connect(handleRuntimeMessage);
+    setSocketInstance(ws);
+
+    // Add your workflow execution logic heres
+    console.log("Running workflow...");
+    // Add your workflow execution logic here
+    nodes
+      .map((node) => ({
+        ...node,
+        data: {
+          ...node.data,
+          runtime: {
+            input: node.data.label,
+            output: node.data.label,
+          },
+        },
+      }))
+      .forEach((node) => {
+        updateNode(node.id, node.data);
+      });
+
+    nodes[0]["style"] = { border: "1px solid red" };
+    nodes[1]["style"] = { border: "1px solid green" };
+    updateNodeStyle(nodes[0].id, nodes[0]["style"]);
+    updateNodeStyle(nodes[1].id, nodes[1]["style"]);
+
+    console.log(JSON.stringify(nodes));
+    console.log(JSON.stringify(edges));
+  };
+
+  // 组件卸载时关闭连接
+  useEffect(() => {
+    return () => socketInstance?.close();
+  }, []);
 
   return (
     <div className="flex flex-col h-screen bg-gray-50">
@@ -80,32 +139,10 @@ function App() {
             )}
 
             {isDebugModel && (
-              <button 
-                onClick={() => {
-                  console.log("Running workflow...");
-                  // Add your workflow execution logic here
-                  nodes.map(node => ({
-                    ...node,
-                    data: {
-                      ...node.data,
-                      runtime: {
-                        input: node.data.label,
-                        output: node.data.label
-                      },
-                    }
-                  })).forEach(node => {
-                    updateNode(node.id, node.data);
-                  });
-
-                  nodes[0]["style"] =  { border: '1px solid red' }
-                  nodes[1]["style"] =  { border: '1px solid green' }
-                  updateNodeStyle(nodes[0].id, nodes[0]["style"])
-                  updateNodeStyle(nodes[1].id, nodes[1]["style"])
-                  
-                  console.log(JSON.stringify(nodes))
-                  console.log(JSON.stringify(edges))
-                }}
-                className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center">
+              <button
+                onClick={handleRunWorkflow}
+                className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center"
+              >
                 <Rocket size={16} className="mr-1" />
                 Run
               </button>
