@@ -19,6 +19,7 @@ interface WorkflowState {
   removeNode: (nodeId: string) => void;
   updateNode: (nodeId: string, newData: any) => void;
   updateNodeStyle: (nodeId: string, newData: any) => void;
+  importWorkflow: (nodes: Node[], edges: Edge[]) => void;
 }
 
 // Create a store for workflow state management
@@ -96,4 +97,13 @@ export const useWorkflowStore = create<WorkflowState>((set) => ({
         return node;
       }),
     })),
+
+  importWorkflow: (importedNodes, importedEdges) =>
+    set(() => {
+      // Return the new state with imported nodes and edges
+      return {
+        nodes: importedNodes,
+        edges: importedEdges,
+      };
+    }),
 }));

@@ -4,7 +4,7 @@ export class WorkflowWebSocket {
     private url: string;
     
     constructor(workflowId: string) {
-      this.url = `ws://localhost:3000/workflow/runtime/${workflowId}`;
+      this.url = `ws://localhost:8000/workflow/runtime/${workflowId}`;
     }
   
     connect(onMessage: (data: any) => void) {

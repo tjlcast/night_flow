@@ -1,17 +1,19 @@
 import { useEffect, useState } from "react";
 import WorkflowEditor from "./components/WorkflowEditor";
-import { Download, Bug, Rocket } from "lucide-react";
+import { Download, Bug, Rocket, Upload } from "lucide-react";
 import "./index.css";
 import { useWorkflowStore } from "./store/workflowStore";
 import { WorkflowWebSocket } from "./utils/websocket";
+import ImportWorkflowModal from './components/ImportWorkflowModal';
 
 function App() {
   const [currentWorkflowId, setCurrentWorkflowId] = useState<string>("abc123");
+  const [isImportModalOpen, setIsImportModalOpen] = useState<boolean>(false);
   const [socketInstance, setSocketInstance] =
     useState<WorkflowWebSocket | null>(null);
   const [isDebugModel, setIsDebugModel] = useState(false);
   const [workflowName, setWorkflowName] = useState<string>("Untitled Workflow");
-  const { nodes, edges, updateNode, updateNodeStyle } = useWorkflowStore();
+  const { nodes, edges, updateNode, updateNodeStyle, importWorkflow } = useWorkflowStore();
 
   const handleExportWorkflow = () => {
     // Create workflow data object
@@ -96,6 +98,24 @@ function App() {
     return () => socketInstance?.close();
   }, []);
 
+  const handleImportWorkflow = (jsonData: any) => {
+    try {
+      // Update workflow name if present
+      if (jsonData.name) {
+        setWorkflowName(jsonData.name);
+      }
+
+      // Import nodes and edges into the store
+      importWorkflow(jsonData.nodes, jsonData.edges);
+
+      // Close the modal
+      setIsImportModalOpen(false);
+    } catch (error) {
+      console.error("Failed to import workflow:", error);
+      alert("导入工作流失败，请检查JSON格式是否正确。");
+    }
+  };
+
   return (
     <div className="flex flex-col h-screen bg-gray-50">
       <header className="bg-white shadow-sm border-b border-gray-200">
@@ -122,6 +142,17 @@ function App() {
               <Bug size={16} className="mr-1" />
               Debug
             </button>
+
+            {!isDebugModel && (
+              <button
+                onClick={() => setIsImportModalOpen(true)}
+                className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center"
+              >
+                <Upload size={16} className="mr-1" />
+                导入工作流
+              </button>
+            )}
+
             {!isDebugModel && (
               <button
                 onClick={handleExportWorkflow}
@@ -153,6 +184,14 @@ function App() {
       <div className="flex-1 overflow-hidden">
         <WorkflowEditor isDebugModel={isDebugModel} />
       </div>
+
+      {isImportModalOpen && (
+        <ImportWorkflowModal
+          isOpen={isImportModalOpen}
+          onClose={() => setIsImportModalOpen(false)}
+          onImport={handleImportWorkflow}
+        />
+      )}
     </div>
   );
 }
