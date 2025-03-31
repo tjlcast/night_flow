@@ -121,10 +121,12 @@ class StoppableWorkflow(Workflow):
 async def websocket_endpoint(websocket: WebSocket, workflow_id: str):
     await websocket.accept()
 
-    # 创建可停止的工作流实例
-    # 读取JSON文件
-    with open('workflow.json', 'r', encoding='utf-8') as f:
-        workflow_data = json.load(f)
+    # # 创建可停止的工作流实例
+    # # 读取JSON文件
+    # with open('workflow.json', 'r', encoding='utf-8') as f:
+    #     workflow_data = json.load(f)
+    data = await websocket.receive_json()
+    workflow_data = json.loads(data)
 
     workflow = StoppableWorkflow(workflow_data)
     loop = asyncio.get_event_loop()

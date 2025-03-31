@@ -85,7 +85,22 @@ function App() {
     handleCleanRuntimeAndStyle();
 
     // 创建新连接
-    const ws = new WorkflowWebSocket(currentWorkflowId);
+    const ws = new WorkflowWebSocket(currentWorkflowId, () => {
+      const workflowData = {
+        name: workflowName,
+        nodes: nodes,
+        edges: edges,
+        exportedAt: new Date().toISOString(),
+      };
+  
+      // Convert to JSON string
+      const jsonString = JSON.stringify(workflowData, null, 2);
+
+      // 通过 WebSocket 发送工作流数据
+      if (!ws.send(jsonString)) {
+        console.error("Failed to send workflow data");
+      }
+    });
     ws.connect(handleRuntimeMessage);
     setSocketInstance(ws);
 
