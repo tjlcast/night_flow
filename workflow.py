@@ -4,6 +4,8 @@ from abc import ABC, abstractmethod
 from typing import Dict, Any, Optional, List, Set
 from collections import deque
 
+from workflow_bool_eval import evaluate_ast, evaluate_expression, parse_expression
+
 
 class WorkflowContext:
     """工作流上下文，用于跟踪执行状态和传递数据"""
@@ -88,7 +90,7 @@ class ConditionalNode(Node):
 
     def __init__(self, node_id: str, node_type: str, data: Dict[str, Any]):
         super().__init__(node_id, node_type, data)
-        self.condition = True  # 默认条件为真，可以从data中获取实际条件
+        self.condition = data["action"]   # 默认条件为真，可以从data中获取实际条件
         self.true_branch: Optional[Node] = None
         self.false_branch: Optional[Node] = None
 
@@ -99,17 +101,19 @@ class ConditionalNode(Node):
 
     def execute(self, context: WorkflowContext, input_data: Optional[Any] = None) -> List[Node]:
         print(f"执行条件节点 {self.label}，输入: {input_data}，条件: {self.condition}")
+        condition = self.condition
+        if isinstance(condition, str):
+            # 解析条件表达式
+            bool_ast = parse_expression(condition)
+            evalucate_result = evaluate_ast(
+                bool_ast, json.dumps(context.global_data))
 
-        # 记录执行情况
-        context.record_execution(self.id, "evaluated", input_data, {
-                                 "condition_result": self.condition})
-
-        if self.condition:
-            print("条件为真，走true分支")
-            return [self.true_branch] if self.true_branch else []
-        else:
-            print("条件为假，走false分支")
-            return [self.false_branch] if self.false_branch else []
+            if evalucate_result:
+                print("条件为真，走true分支")
+                return [self.true_branch] if self.true_branch else []
+            else:
+                print("条件为假，走false分支")
+                return [self.false_branch] if self.false_branch else []
 
 
 class OutputNode(Node):

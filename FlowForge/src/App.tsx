@@ -68,6 +68,12 @@ function App() {
       updateNodeStyle(message.nodeId, { border: "2px solid #EF4444" });
       console.error(`Node ${message.nodeId} error:`, message.error);
     }
+    updateNode(message.nodeId, {
+      ...nodes.find((node) => node.id === message.nodeId)?.data,
+      runtime: {
+        output: JSON.stringify(message.output),
+      },
+    });
   };
 
   const handleRunWorkflow = () => {
