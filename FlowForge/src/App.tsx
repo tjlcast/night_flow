@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
 import WorkflowEditor from "./components/WorkflowEditor";
-import { Download, Bug, Rocket, Upload } from "lucide-react";
+import { Download, Bug, BugOff, Rocket, Upload } from "lucide-react";
 import "./index.css";
 import { useWorkflowStore } from "./store/workflowStore";
 import { WorkflowWebSocket } from "./utils/websocket";
 import ImportWorkflowModal from "./components/ImportWorkflowModal";
 
 function App() {
-  const [currentWorkflowId, setCurrentWorkflowId] = useState<string>("abc123");
+  const [currentWorkflowId] = useState<string>("abc123");
   const [isImportModalOpen, setIsImportModalOpen] = useState<boolean>(false);
   const [socketInstance, setSocketInstance] =
     useState<WorkflowWebSocket | null>(null);
@@ -160,8 +160,17 @@ function App() {
               }}
               className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center"
             >
-              <Bug size={16} className="mr-1" />
-              Debug
+              {isDebugModel ? (
+                <>
+                  <BugOff size={16} className="mr-1" />
+                  Debug Off
+                </>
+              ) : (
+                <>
+                  <Bug size={16} className="mr-1" />
+                  Debug
+                </>
+              )}
             </button>
 
             {!isDebugModel && (
