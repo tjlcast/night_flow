@@ -158,6 +158,10 @@ export default function WorkflowEditor({ isDebugModel }: WorkflowEditorProps) {
         <div className="flex-1 h-full" ref={reactFlowWrapper}>
           <ReactFlowProvider>
             <ReactFlow
+              style={{
+                cursor:
+                  "url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMiIgaGVpZ2h0PSIzMiIgdmlld0JveD0iMCAwIDMyIDMyIj4KICA8cGF0aCBkPSJNNiA2TDI2IDZMMjYgMjBMMTYgMjBMMTIgMjZMMTIgMjBMNiAyMFoiIGZpbGw9IndoaXRlIiBzdHJva2U9ImJsYWNrIiBzdHJva2Utd2lkdGg9IjMiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz4KPC9zdmc+'), pointer",
+              }}
               nodes={nodes}
               edges={edges}
               onNodesChange={onNodesChange}
