@@ -33,3 +33,26 @@ curl -X POST http://localhost:3000/api/v1/workers/5/heartbeat
 
 curl -X GET http://localhost:8000/
 
+### 
+
+
+@ip = 121.40.102.152
+@port = 9967
+
+
+curl --request POST \
+  --url http://{{ip}}:{{port}}/v1/chat/completions \
+  --header 'Content-Type: application/json' \
+  --data '{
+  "max_tokens": 0,
+  "messages": [
+    {
+      "content": "hi",
+      "role": "user"
+    }
+  ],
+  "model": "CHAT",
+  "stream": false,
+  "temperature": 0,
+  "ip": "121.40.102.152"
+}'
