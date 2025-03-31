@@ -60,7 +60,8 @@ function App() {
     isSuccess: boolean;
     nodeId: string;
     output: any;
-    error?: string;
+    error?: any;
+    input?: any;
   }) => {
     if (message.isSuccess) {
       updateNodeStyle(message.nodeId, { border: "2px solid #10B981" });
@@ -71,7 +72,7 @@ function App() {
     updateNode(message.nodeId, {
       ...nodes.find((node) => node.id === message.nodeId)?.data,
       runtime: {
-        output: JSON.stringify(message.output),
+        ...message, // 使用对象扩展运算符将 message 的所有属性复制到 runtime 中
       },
     });
   };

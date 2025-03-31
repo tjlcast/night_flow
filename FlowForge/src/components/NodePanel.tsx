@@ -184,7 +184,7 @@ export default function NodePanel({
               </label>
               <textarea
                 rows={4}
-                value={localInput}
+                value={JSON.stringify(localInput, null, 2)}
                 onChange={(e) => setLocalDescription(e.target.value)}
                 onBlur={handleSave}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
@@ -196,7 +196,7 @@ export default function NodePanel({
               </label>
               <textarea
                 rows={4}
-                value={localOutput}
+                value={JSON.stringify(localOutput, null, 2)}
                 onChange={(e) => setLocalDescription(e.target.value)}
                 onBlur={handleSave}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"

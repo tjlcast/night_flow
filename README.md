@@ -137,3 +137,26 @@ node-monitor-api/
 ```
 
 现在你已经成功设置并运行了机器节点管理系统的后端 API 服务！
+
+
+### 节点数据
+``` json
+
+        {
+            "id": "4",
+            "type": "output",
+            "data": {
+                "type": "output",
+                "label": "输出结果",
+                "action": "保存结果",
+                "description": "工作流结束节点"
+            },
+            "runtime":{
+                "isSuccess": "[boolean]",
+               "nodeId": "[string]",
+               "output: "[any]",
+               "error": "[string]",
+               "input": "[string]"
+            }
+        }
+```

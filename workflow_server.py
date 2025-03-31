@@ -107,7 +107,8 @@ class StoppableWorkflow(Workflow):
 
             # 触发回调
             if on_node_complete:
-                on_node_complete(current_node.id, is_success, output, error)
+                on_node_complete(current_node.id, is_success,
+                                 current_input, output, error)
 
             # 处理后续节点
             for next_node in next_step_nodes:
@@ -129,8 +130,9 @@ async def websocket_endpoint(websocket: WebSocket, workflow_id: str):
     loop = asyncio.get_event_loop()
     queue = asyncio.Queue()
 
-    def on_node_complete(node_id, is_success, output, error):
+    def on_node_complete(node_id, is_success, input, output, error):
         message = {
+            "input": json.dumps(input),
             "isSuccess": is_success,
             "nodeId": node_id,
             "output": output
