@@ -88,7 +88,7 @@ class ConditionalNode(Node):
 
     def __init__(self, node_id: str, node_type: str, data: Dict[str, Any]):
         super().__init__(node_id, node_type, data)
-        self.condition = False  # 默认条件为真，可以从data中获取实际条件
+        self.condition = True  # 默认条件为真，可以从data中获取实际条件
         self.true_branch: Optional[Node] = None
         self.false_branch: Optional[Node] = None
 
