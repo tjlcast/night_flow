@@ -4,7 +4,7 @@ import { Download, Bug, Rocket, Upload } from "lucide-react";
 import "./index.css";
 import { useWorkflowStore } from "./store/workflowStore";
 import { WorkflowWebSocket } from "./utils/websocket";
-import ImportWorkflowModal from './components/ImportWorkflowModal';
+import ImportWorkflowModal from "./components/ImportWorkflowModal";
 
 function App() {
   const [currentWorkflowId, setCurrentWorkflowId] = useState<string>("abc123");
@@ -13,7 +13,8 @@ function App() {
     useState<WorkflowWebSocket | null>(null);
   const [isDebugModel, setIsDebugModel] = useState(false);
   const [workflowName, setWorkflowName] = useState<string>("Untitled Workflow");
-  const { nodes, edges, updateNode, updateNodeStyle, importWorkflow } = useWorkflowStore();
+  const { nodes, edges, updateNode, updateNodeStyle, importWorkflow } =
+    useWorkflowStore();
 
   const handleExportWorkflow = () => {
     // Create workflow data object
@@ -97,6 +98,19 @@ function App() {
   useEffect(() => {
     return () => socketInstance?.close();
   }, []);
+
+  // 新增 useEffect 监听调试模式切换
+  useEffect(() => {
+    // 当退出调试模式时清除所有 runtime 信息
+    nodes.forEach((node) => {
+      // 使用对象解构移除 runtime 属性
+      const { runtime, ...cleanData } = node.data;
+      updateNode(node.id, cleanData);
+      // 移除节点样式（执行是否成功）
+      updateNodeStyle(node.id, "");
+    });
+    // }, [isDebugModel, nodes, updateNode]); // 确保依赖项正确
+  }, [isDebugModel]); // 确保依赖项正确
 
   const handleImportWorkflow = (jsonData: any) => {
     try {
