@@ -16,6 +16,18 @@ function App() {
   const { nodes, edges, updateNode, updateNodeStyle, importWorkflow } =
     useWorkflowStore();
 
+  const handleCleanRuntimeAndStyle = () => {
+    // 当退出调试模式时清除所有 runtime 信息
+    nodes.forEach((node) => {
+      // 使用对象解构移除 runtime 属性
+      const { runtime, ...cleanData } = node.data;
+      updateNode(node.id, cleanData);
+      // 移除节点样式（执行是否成功）
+      updateNodeStyle(node.id, "");
+    });
+    // }, [isDebugModel, nodes, updateNode]); // 确保依赖项正确
+  };
+
   const handleExportWorkflow = () => {
     // Create workflow data object
     const workflowData = {
@@ -62,6 +74,9 @@ function App() {
     // 关闭现有连接
     socketInstance?.close();
 
+    // 清除所有 runtime 信息和样式
+    handleCleanRuntimeAndStyle();
+
     // 创建新连接
     const ws = new WorkflowWebSocket(currentWorkflowId);
     ws.connect(handleRuntimeMessage);
@@ -101,15 +116,7 @@ function App() {
 
   // 新增 useEffect 监听调试模式切换
   useEffect(() => {
-    // 当退出调试模式时清除所有 runtime 信息
-    nodes.forEach((node) => {
-      // 使用对象解构移除 runtime 属性
-      const { runtime, ...cleanData } = node.data;
-      updateNode(node.id, cleanData);
-      // 移除节点样式（执行是否成功）
-      updateNodeStyle(node.id, "");
-    });
-    // }, [isDebugModel, nodes, updateNode]); // 确保依赖项正确
+    handleCleanRuntimeAndStyle();
   }, [isDebugModel]); // 确保依赖项正确
 
   const handleImportWorkflow = (jsonData: any) => {
