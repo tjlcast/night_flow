@@ -37,6 +37,8 @@ export default function NodePanel({
     setLocalDescription(node.data.description || "");
     setLocalCondition(node.data.condition || "");
     setLocalParallelPaths(node.data.parallelPaths || 3);
+    setLocalInput(node.data?.runtime?.input || "No input");
+    setLocalOutput(node.data?.runtime?.output || "No output");
   }, [node]);
 
   const handleSave = () => {
