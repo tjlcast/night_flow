@@ -103,17 +103,18 @@ class StoppableWorkflow(Workflow):
 
             # 获取执行结果
             node_history = self.context.get_node_history(current_node.id)
+            input = node_history.get('input') if node_history else None
             output = node_history.get('output') if node_history else None
 
             # 触发回调
             if on_node_complete:
                 on_node_complete(current_node.id, is_success,
-                                 current_input, output, error)
+                                 input, output, error)
 
             # 处理后续节点
             for next_node in next_step_nodes:
                 if next_node and next_node.id not in visited:
-                    queue.append((next_node, self.context.current_data))
+                    queue.append((next_node, output))
                     visited.add(next_node.id)
 
 
@@ -134,7 +135,7 @@ async def websocket_endpoint(websocket: WebSocket, workflow_id: str):
 
     def on_node_complete(node_id, is_success, input, output, error):
         message = {
-            "input": json.dumps(input),
+            "input": input,
             "isSuccess": is_success,
             "nodeId": node_id,
             "output": output

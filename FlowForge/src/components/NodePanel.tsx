@@ -51,8 +51,8 @@ export default function NodePanel({
     setLocalDescription(node.data.description || "");
     setLocalCondition(node.data.condition || "");
     setLocalParallelPaths(node.data.parallelPaths || 3);
-    setLocalInput(node.data?.runtime?.input || "No input");
-    setLocalOutput(node.data?.runtime?.output || "No output");
+    setLocalInput(node.data?.runtime?.input);
+    setLocalOutput(node.data?.runtime?.output);
 
     setLocalModel(node.data.model || "CHAT");
     setLocalTemperature(node.data.temperature || 0);

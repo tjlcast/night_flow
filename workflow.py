@@ -4,6 +4,7 @@ import requests
 from abc import ABC, abstractmethod
 from typing import Dict, Any, Optional, List, Set
 from collections import deque
+from workflow_utils import parse_string_2_multi
 
 
 from workflow_bool_eval import evaluate_ast, evaluate_expression, parse_expression
@@ -69,9 +70,9 @@ class InputNode(Node):
     def execute(self, context: WorkflowContext, input_data: Optional[Any] = None) -> List[Node]:
         print(f"执行输入节点 {self.label}，action: {self.action}")
         # 模拟输入数据
-        output_data = {"input_data": "示例输入数据"}
-        context.current_data = output_data
-        context.record_execution(self.id, "completed", input_data, output_data)
+        output = parse_string_2_multi(self.action)
+        context.current_data = output
+        context.record_execution(self.id, "completed", None, output)
         return self.next_nodes if self.next_nodes else []
 
 
@@ -169,7 +170,8 @@ class ConditionalNode(Node):
             # 解析条件表达式
             bool_ast = parse_expression(condition)
             evalucate_result = evaluate_ast(
-                bool_ast, json.dumps(context.global_data))
+                bool_ast, {})
+            context.record_execution(self.id, "completed", input_data, evalucate_result)
 
             if evalucate_result:
                 print("条件为真，走true分支")
