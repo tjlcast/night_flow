@@ -212,12 +212,17 @@ export default function Dashboard() {
     navigate("/machine-manager");
   };
 
+  // 添加状态控制信息框显示
+  const [showJialtangInfoModal, setShowJialtangInfoModal] = useState(false);
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header Toolbar */}
       <div className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-6xl mx-auto px-8 py-4 flex justify-between items-center">
-          <h1 className="text-xl font-semibold text-gray-800">Workflow Dashboard</h1>
+          <h1 className="text-xl font-semibold text-gray-800">
+            Workflow Dashboard
+          </h1>
           <div className="flex space-x-4">
             <button
               onClick={handleNavigateToMachineManager}
@@ -274,6 +279,39 @@ export default function Dashboard() {
           ))}
         </div>
       </div>
+
+      {/* Footer */}
+      {/* <footer className="fixed bottom-0 left-0 right-0 py-4 bg-white border-t border-gray-200 text-center text-gray-500">
+        Power by jialtang
+      </footer> */}
+      <footer className="fixed bottom-0 left-0 right-0 py-4 bg-white border-t border-gray-200 text-center">
+        <button
+          onClick={() => setShowJialtangInfoModal(true)}
+          className="text-blue-600 hover:text-blue-800 hover:underline"
+        >
+          Power by jialtang
+        </button>
+      </footer>
+
+      {/* 信息框模态框 */}
+      {showJialtangInfoModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full">
+            <h3 className="text-lg font-semibold mb-4">关于 jialtang</h3>
+            <p className="mb-4">
+            jialtang写的？什么鬼！大模型写的！<br />赞美Deepseek！<br />赞美太阳！
+            </p>
+            <div className="flex justify-end">
+              <button
+                onClick={() => setShowJialtangInfoModal(false)}
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              >
+                关闭
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
