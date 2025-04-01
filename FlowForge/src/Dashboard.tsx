@@ -1,7 +1,7 @@
 // Dashboard.tsx
 import { useState } from "react";
-import { Link } from "react-router-dom";
-import { Plus, Trash2, Edit } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { Plus, Trash2, Edit, Server } from "lucide-react";
 
 interface Workflow {
   id: string;
@@ -202,26 +202,43 @@ export default function Dashboard() {
     },
   ]);
 
+  const navigate = useNavigate();
+
   const handleDeleteWorkflow = (id: string) => {
     setWorkflows(workflows.filter((workflow) => workflow.id !== id));
   };
 
-  return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <div className="max-w-6xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-800">
-            Workflow Dashboard
-          </h1>
-          <Link
-            to="/workflow/new"
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md flex items-center"
-          >
-            <Plus size={16} className="mr-2" />
-            New Workflow
-          </Link>
-        </div>
+  const handleNavigateToMachineManager = () => {
+    navigate("/machine-manager");
+  };
 
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header Toolbar */}
+      <div className="bg-white shadow-sm border-b border-gray-200">
+        <div className="max-w-6xl mx-auto px-8 py-4 flex justify-between items-center">
+          <h1 className="text-xl font-semibold text-gray-800">Workflow Dashboard</h1>
+          <div className="flex space-x-4">
+            <button
+              onClick={handleNavigateToMachineManager}
+              className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+            >
+              <Server size={16} className="mr-2" />
+              Machine Manager
+            </button>
+            <Link
+              to="/workflow/new"
+              className="flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors"
+            >
+              <Plus size={16} className="mr-2" />
+              New Workflow
+            </Link>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="max-w-6xl mx-auto p-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {workflows.map((workflow) => (
             <div
@@ -235,7 +252,7 @@ export default function Dashboard() {
                 <div className="flex space-x-2">
                   <Link
                     to={`/workflow/${workflow.id}`}
-                    state={{ workflowConfig: workflow.config }} // Pass the config as state
+                    state={{ workflowConfig: workflow.config }}
                     className="text-gray-500 hover:text-blue-600"
                     title="Edit"
                   >
