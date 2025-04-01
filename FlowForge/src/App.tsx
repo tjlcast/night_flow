@@ -4,12 +4,14 @@ import { Download, Bug, BugOff, Rocket, Upload } from "lucide-react";
 import "./index.css";
 import { useWorkflowStore } from "./store/workflowStore";
 import { WorkflowWebSocket } from "./utils/websocket";
-import ImportWorkflowModal from "./components/ImportWorkflowModal";
+import {ImportWorkflowModal} from "./components/ImportWorkflowModal";
 
 function App() {
   const [currentWorkflowId] = useState<string>("abc123");
-  const [isSocketConnected, setIsSocketConnected] = useState(false); // 新增socket状态标识workflow是否运行
+  const [isSocketConnected, setIsSocketConnected] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState<boolean>(false);
+  const [isExportModalOpen, setIsExportModalOpen] = useState<boolean>(false);
+  const [exportedJson, setExportedJson] = useState<string>("");
   const [socketInstance, setSocketInstance] =
     useState<WorkflowWebSocket | null>(null);
   const [isDebugModel, setIsDebugModel] = useState(false);
@@ -18,41 +20,40 @@ function App() {
     useWorkflowStore();
 
   const handleCleanRuntimeAndStyle = () => {
-    // 当退出调试模式时清除所有 runtime 信息
     nodes.forEach((node) => {
-      // 使用对象解构移除 runtime 属性
       const { runtime, ...cleanData } = node.data;
       updateNode(node.id, cleanData);
-      // 移除节点样式（执行是否成功）
       updateNodeStyle(node.id, "");
     });
-    // }, [isDebugModel, nodes, updateNode]); // 确保依赖项正确
   };
 
-  const handleExportWorkflow = () => {
-    // Create workflow data object
+  const prepareExportData = () => {
     const workflowData = {
       name: workflowName,
       nodes: nodes,
       edges: edges,
       exportedAt: new Date().toISOString(),
     };
+    return JSON.stringify(workflowData, null, 2);
+  };
 
-    // Convert to JSON string
-    const jsonString = JSON.stringify(workflowData, null, 2);
+  const handleExportWorkflow = () => {
+    const jsonString = prepareExportData();
+    setExportedJson(jsonString);
+    setIsExportModalOpen(true);
+  };
 
-    // Create blob and download link
+  const handleDownloadWorkflow = () => {
+    const jsonString = prepareExportData();
     const blob = new Blob([jsonString], { type: "application/json" });
     const url = URL.createObjectURL(blob);
 
-    // Create temporary link element to trigger download
     const link = document.createElement("a");
     link.href = url;
     link.download = `${workflowName.replace(/\s+/g, "_")}.json`;
     document.body.appendChild(link);
     link.click();
 
-    // Clean up
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
   };
@@ -73,23 +74,18 @@ function App() {
     updateNode(message.nodeId, {
       ...nodes.find((node) => node.id === message.nodeId)?.data,
       runtime: {
-        ...message, // 使用对象扩展运算符将 message 的所有属性复制到 runtime 中
+        ...message,
       },
     });
   };
 
   const handleRunWorkflow = () => {
-    // 关闭现有连接
     socketInstance?.close();
     setIsSocketConnected(true);
-
-    // 清除所有 runtime 信息和样式
     handleCleanRuntimeAndStyle();
 
-    // 创建新连接
     const ws = new WorkflowWebSocket(
       currentWorkflowId,
-      // 设置连接callback
       () => {
         const workflowData = {
           name: workflowName,
@@ -97,16 +93,11 @@ function App() {
           edges: edges,
           exportedAt: new Date().toISOString(),
         };
-
-        // Convert to JSON string
         const jsonString = JSON.stringify(workflowData, null, 2);
-
-        // 通过 WebSocket 发送工作流数据
         if (!ws.send(jsonString)) {
           console.error("Failed to send workflow data");
         }
       },
-      // 设置断开callback
       () => {
         setIsSocketConnected(false);
       }
@@ -115,32 +106,24 @@ function App() {
     setSocketInstance(ws);
 
     console.log("Running workflow...");
-
     console.log(JSON.stringify(nodes));
     console.log(JSON.stringify(edges));
   };
 
-  // 组件卸载时关闭连接
   useEffect(() => {
     return () => socketInstance?.close();
   }, []);
 
-  // 新增 useEffect 监听调试模式切换
   useEffect(() => {
     handleCleanRuntimeAndStyle();
-  }, [isDebugModel]); // 确保依赖项正确
+  }, [isDebugModel]);
 
   const handleImportWorkflow = (jsonData: any) => {
     try {
-      // Update workflow name if present
       if (jsonData.name) {
         setWorkflowName(jsonData.name);
       }
-
-      // Import nodes and edges into the store
       importWorkflow(jsonData.nodes, jsonData.edges);
-
-      // Close the modal
       setIsImportModalOpen(false);
     } catch (error) {
       console.error("Failed to import workflow:", error);
@@ -165,7 +148,6 @@ function App() {
             />
           </div>
           <div className="flex space-x-2">
-            {/* 新增运行状态指示器 */}
             {isDebugModel && isSocketConnected && (
               <div className="flex items-center px-3 text-sm text-green-600">
                 <div className="w-2 h-2 rounded-full bg-green-500 mr-2"></div>
@@ -239,6 +221,16 @@ function App() {
           isOpen={isImportModalOpen}
           onClose={() => setIsImportModalOpen(false)}
           onImport={handleImportWorkflow}
+        />
+      )}
+
+      {isExportModalOpen && (
+        <ImportWorkflowModal
+          isOpen={isExportModalOpen}
+          onClose={() => setIsExportModalOpen(false)}
+          defaultValue={exportedJson}
+          isExportMode={true}
+          onDownload={handleDownloadWorkflow}
         />
       )}
     </div>
