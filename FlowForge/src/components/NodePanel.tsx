@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Node } from "reactflow";
-import { Trash2, X } from "lucide-react";
+import { ChevronDown, ChevronUp, Trash2, X } from "lucide-react";
 
 interface NodePanelProps {
   isDebugModel: boolean;
@@ -44,6 +44,7 @@ export default function NodePanel({
   const [localMessages, setLocalMessages] = useState(
     node.data.messages || [{ role: "user", content: "" }]
   );
+  const [showDebugInfo, setShowDebugInfo] = useState(false);
 
   useEffect(() => {
     setLocalLabel(node.data.label);
@@ -320,30 +321,46 @@ export default function NodePanel({
         {isDebugModel && (
           <div>
             <hr className="my-4" />
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Input
-              </label>
-              <textarea
-                rows={4}
-                value={JSON.stringify(localInput, null, 2)}
-                onChange={(e) => setLocalDescription(e.target.value)}
-                onBlur={handleSave}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Output
-              </label>
-              <textarea
-                rows={4}
-                value={JSON.stringify(localOutput, null, 2)}
-                onChange={(e) => setLocalDescription(e.target.value)}
-                onBlur={handleSave}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-              />
-            </div>
+            <button
+              onClick={() => setShowDebugInfo(!showDebugInfo)}
+              className="flex items-center justify-between w-full p-2 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-md"
+            >
+              <span>调试信息</span>
+              {showDebugInfo ? (
+                <ChevronUp size={16} />
+              ) : (
+                <ChevronDown size={16} />
+              )}
+            </button>
+
+            {showDebugInfo && (
+              <div className="mt-2 space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Input
+                  </label>
+                  <textarea
+                    rows={4}
+                    value={JSON.stringify(localInput, null, 2)}
+                    onChange={(e) => setLocalDescription(e.target.value)}
+                    onBlur={handleSave}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Output
+                  </label>
+                  <textarea
+                    rows={4}
+                    value={JSON.stringify(localOutput, null, 2)}
+                    onChange={(e) => setLocalDescription(e.target.value)}
+                    onBlur={handleSave}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  />
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
