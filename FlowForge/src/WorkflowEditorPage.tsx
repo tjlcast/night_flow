@@ -1,6 +1,6 @@
 // WorkflowEditorPage.tsx
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import WorkflowEditor from "./components/WorkflowEditor";
 import { Download, Bug, BugOff, Rocket, Upload, ArrowLeft } from "lucide-react";
 import "./index.css";
@@ -11,6 +11,7 @@ import { ImportWorkflowModal } from "./components/ImportWorkflowModal";
 export default function WorkflowEditorPage() {
   const { workflowId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation(); // Add this to access location state
   const [isSocketConnected, setIsSocketConnected] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState<boolean>(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState<boolean>(false);
@@ -23,6 +24,15 @@ export default function WorkflowEditorPage() {
   );
   const { nodes, edges, updateNode, updateNodeStyle, importWorkflow } =
     useWorkflowStore();
+
+  // Load workflow config when component mounts
+  useEffect(() => {
+    if (location.state?.workflowConfig) {
+      const { name, nodes, edges } = location.state.workflowConfig;
+      setWorkflowName(name);
+      importWorkflow(nodes, edges);
+    }
+  }, [location.state, importWorkflow]);
 
   const handleCleanRuntimeAndStyle = () => {
     nodes.forEach((node) => {
@@ -89,7 +99,7 @@ export default function WorkflowEditorPage() {
     setIsSocketConnected(true);
     handleCleanRuntimeAndStyle();
 
-    const currentWorkflowId = workflowId ? workflowId : "abc123"
+    const currentWorkflowId = workflowId ? workflowId : "abc123";
     const ws = new WorkflowWebSocket(
       currentWorkflowId,
       () => {

@@ -7,24 +7,212 @@ interface Workflow {
   id: string;
   name: string;
   updatedAt: string;
+  config: any;
 }
 
 export default function Dashboard() {
   const [workflows, setWorkflows] = useState<Workflow[]>([
-    { id: "1", name: "Marketing Campaign", updatedAt: "2023-05-15" },
-    { id: "2", name: "Data Processing", updatedAt: "2023-05-10" },
-    { id: "3", name: "Customer Onboarding", updatedAt: "2023-05-01" },
+    {
+      id: "1",
+      name: "Multiple LLMs",
+      updatedAt: "2023-05-15",
+      config: {
+        name: "Multiple LLMs",
+        nodes: [
+          {
+            id: "node-oscmxd5c",
+            type: "customNode",
+            position: {
+              x: 360,
+              y: 135,
+            },
+            data: {
+              label: "数据输入",
+              type: "input",
+              action: "未配置",
+              description: "",
+              runtime: {
+                input: null,
+                isSuccess: true,
+                nodeId: "node-oscmxd5c",
+                output: "未配置",
+              },
+            },
+            width: 150,
+            height: 76,
+            style: {},
+          },
+          {
+            id: "node-zdqwk4be",
+            type: "customNode",
+            position: {
+              x: 285,
+              y: 240,
+            },
+            data: {
+              label: "If/Else 条件",
+              type: "conditional",
+              action: "未配置",
+              description: "",
+              condition: "1 == 1",
+              runtime: {
+                input: "未配置",
+                isSuccess: true,
+                nodeId: "node-zdqwk4be",
+                output: true,
+              },
+            },
+            width: 150,
+            height: 105,
+            selected: false,
+            dragging: false,
+            style: {},
+          },
+          {
+            id: "node-xop8rnk4",
+            type: "customNode",
+            position: {
+              x: 195,
+              y: 375,
+            },
+            data: {
+              label: "大模型对话",
+              type: "llm",
+              action: "未配置",
+              description: "",
+              model: "CHAT",
+              temperature: 0,
+              maxTokens: 0,
+              messages: [
+                {
+                  role: "user",
+                  content: "你好",
+                },
+              ],
+              runtime: {
+                input: true,
+                isSuccess: true,
+                nodeId: "node-xop8rnk4",
+                output: "你好！有什么可以帮助你的吗？",
+              },
+            },
+            width: 225,
+            height: 200,
+            selected: true,
+            positionAbsolute: {
+              x: 195,
+              y: 375,
+            },
+            dragging: false,
+            style: {},
+          },
+          {
+            id: "node-s0ndjb3y",
+            type: "customNode",
+            position: {
+              x: 480,
+              y: 390,
+            },
+            data: {
+              label: "大模型对话",
+              type: "llm",
+              action: "未配置",
+              description: "",
+              model: "CHAT",
+              temperature: 0,
+              maxTokens: 0,
+              messages: [
+                {
+                  role: "user",
+                  content: "你是谁？",
+                },
+              ],
+            },
+            width: 150,
+            height: 135,
+            selected: false,
+            positionAbsolute: {
+              x: 480,
+              y: 390,
+            },
+            dragging: false,
+            style: {},
+          },
+        ],
+        edges: [
+          {
+            source: "node-zdqwk4be",
+            sourceHandle: "true",
+            target: "node-xop8rnk4",
+            targetHandle: null,
+            animated: true,
+            style: {
+              stroke: "#555",
+              strokeWidth: 2,
+            },
+            id: "reactflow__edge-node-zdqwk4betrue-node-xop8rnk4",
+          },
+          {
+            source: "node-zdqwk4be",
+            sourceHandle: "false",
+            target: "node-s0ndjb3y",
+            targetHandle: null,
+            animated: true,
+            style: {
+              stroke: "#555",
+              strokeWidth: 2,
+            },
+            id: "reactflow__edge-node-zdqwk4befalse-node-s0ndjb3y",
+          },
+          {
+            source: "node-oscmxd5c",
+            sourceHandle: null,
+            target: "node-zdqwk4be",
+            targetHandle: null,
+            animated: true,
+            style: {
+              stroke: "#555",
+              strokeWidth: 2,
+            },
+            id: "reactflow__edge-node-oscmxd5c-node-zdqwk4be",
+          },
+        ],
+        exportedAt: "2025-04-01T15:14:50.562Z",
+      },
+    },
+    {
+      id: "2",
+      name: "Data Processing",
+      updatedAt: "2023-05-10",
+      config: {
+        name: "Data Processing",
+        nodes: [],
+        edges: [],
+      },
+    },
+    {
+      id: "3",
+      name: "Customer Onboarding",
+      updatedAt: "2023-05-01",
+      config: {
+        name: "Customer Onboarding",
+        nodes: [],
+        edges: [],
+      },
+    },
   ]);
 
   const handleDeleteWorkflow = (id: string) => {
-    setWorkflows(workflows.filter(workflow => workflow.id !== id));
+    setWorkflows(workflows.filter((workflow) => workflow.id !== id));
   };
 
   return (
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-6xl mx-auto">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-800">Workflow Dashboard</h1>
+          <h1 className="text-3xl font-bold text-gray-800">
+            Workflow Dashboard
+          </h1>
           <Link
             to="/workflow/new"
             className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md flex items-center"
@@ -41,10 +229,13 @@ export default function Dashboard() {
               className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow"
             >
               <div className="flex justify-between items-start">
-                <h3 className="text-lg font-medium text-gray-800">{workflow.name}</h3>
+                <h3 className="text-lg font-medium text-gray-800">
+                  {workflow.name}
+                </h3>
                 <div className="flex space-x-2">
                   <Link
                     to={`/workflow/${workflow.id}`}
+                    state={{ workflowConfig: workflow.config }} // Pass the config as state
                     className="text-gray-500 hover:text-blue-600"
                     title="Edit"
                   >
