@@ -301,7 +301,7 @@ export default function MachineManager() {
       )}
 
       <br></br>
-      <h1 className="text-3xl font-bold text-center mb-8">机器节点管理系统</h1>
+      <h1 className="text-3xl font-bold text-center mb-8">Machine Manager</h1>
 
       {error && (
         <div className="error-message text-center p-5 bg-red-100 text-red-800 rounded-lg mb-5">
