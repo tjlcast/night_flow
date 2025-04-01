@@ -98,7 +98,7 @@ class LLMNode(Node):
         self.max_tokens = data.get('maxTokens', 0)
         self.messages = data.get('messages', [])
         self.ip = data.get('ip', '121.40.102.152')  # 默认IP
-        self.port = data.get('port', '9967')  # 默认端口
+        self.port = data.get('port', '9966')  # 默认端口
 
     def execute(self, context: WorkflowContext, input_data: Optional[Any] = None) -> List[Node]:
         print(f"执行LLM节点 {self.label}，模型: {self.model}，温度: {self.temperature}")

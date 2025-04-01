@@ -241,49 +241,62 @@ export default function NodePanel({
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 对话消息
               </label>
-              {localMessages.map((msg: { role: string; content: string }, index: number) => (
-                <div key={index} className="mb-2">
-                  <select
-                    value={msg.role}
-                    onChange={(e) => {
-                      const newMessages = [...localMessages];
-                      newMessages[index].role = e.target.value;
-                      setLocalMessages(newMessages);
-                    }}
-                    className="w-full mb-1 px-2 py-1 border border-gray-300 rounded-md shadow-sm text-sm"
-                  >
-                    <option value="user">用户</option>
-                    <option value="assistant">助手</option>
-                    <option value="system">系统</option>
-                  </select>
-                  <textarea
-                    value={msg.content}
-                    onChange={(e) => {
-                      const newMessages = [...localMessages];
-                      newMessages[index].content = e.target.value;
-                      setLocalMessages(newMessages);
-                    }}
-                    rows={2}
-                    className="w-full px-2 py-1 border border-gray-300 rounded-md shadow-sm text-sm"
-                  />
-                  <button
-                    onClick={() => {
-                      setLocalMessages(
-                        localMessages.filter((_: any, i: number) => i !== index)
-                      );
-                    }}
-                    className="text-xs text-red-500 hover:text-red-700"
-                  >
-                    删除
-                  </button>
-                </div>
-              ))}
+              {localMessages.map(
+                (msg: { role: string; content: string }, index: number) => (
+                  <div key={index} className="mb-2">
+                    <select
+                      value={msg.role}
+                      onChange={(e) => {
+                        const newMessages = [...localMessages];
+                        newMessages[index].role = e.target.value;
+                        setLocalMessages(newMessages);
+                        handleSave();
+                      }}
+                      className="w-full mb-1 px-2 py-1 border border-gray-300 rounded-md shadow-sm text-sm"
+                    >
+                      <option value="user">用户</option>
+                      <option value="assistant">助手</option>
+                      <option value="system">系统</option>
+                    </select>
+                    <textarea
+                      value={msg.content}
+                      onChange={(e) => {
+                        const newMessages = [...localMessages];
+                        newMessages[index].content = e.target.value;
+                        setLocalMessages(newMessages);
+                        handleSave();
+                      }}
+                      rows={2}
+                      className="w-full px-2 py-1 border border-gray-300 rounded-md shadow-sm text-sm"
+                    />
+                    <button
+                      onClick={() => {
+                        const newMessages = localMessages.filter(
+                          (_: any, i: number) => i !== index
+                        );
+                        setLocalMessages(newMessages);
+
+                        // 直接使用 newMessages 更新节点数据，而不是等待状态更新
+                        const updatedData = {
+                          ...node.data,
+                          messages: newMessages,
+                        };
+                        updateNodeData(node.id, updatedData);
+                      }}
+                      className="text-xs text-red-500 hover:text-red-700"
+                    >
+                      - 删除消息
+                    </button>
+                  </div>
+                )
+              )}
               <button
                 onClick={() => {
                   setLocalMessages([
                     ...localMessages,
                     { role: "user", content: "" },
                   ]);
+                  handleSave();
                 }}
                 className="mt-1 text-xs text-blue-500 hover:text-blue-700"
               >
