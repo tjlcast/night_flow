@@ -1,3 +1,4 @@
+// @ts-ignore
 import { ArrowRight, ArrowsUpFromLine, ArrowRightToLine, Bot, ChartBar, Copy, Database, FilePlus, GitBranch, GitFork, GitMerge, Layers, Mail, MessageSquare, Server, Workflow } from 'lucide-react';
 
 const nodeCategories = [

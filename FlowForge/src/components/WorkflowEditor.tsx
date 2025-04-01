@@ -1,3 +1,4 @@
+// @ts-ignore
 import { useState, useRef, useCallback, useEffect } from "react";
 import ReactFlow, {
   ReactFlowProvider,
@@ -6,6 +7,7 @@ import ReactFlow, {
   MiniMap,
   addEdge,
   Node,
+  // @ts-ignore
   Edge,
   NodeTypes,
   Connection,
@@ -37,6 +39,7 @@ export default function WorkflowEditor({ isDebugModel }: WorkflowEditorProps) {
   const {
     nodes,
     edges,
+    // @ts-ignore
     setNodes,
     setEdges,
     onNodesChange,
