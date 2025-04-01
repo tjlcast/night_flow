@@ -56,3 +56,36 @@ curl --request POST \
   "temperature": 0,
   "ip": "121.40.102.152"
 }'
+
+
+### 
+
+
+curl --request POST \
+  --url http://{{ip}}:{{port}}/v1/chat/completions \
+  --header 'Content-Type: application/json' \
+  --data '{"model": "CHAT", "temperature": 0.7, "max_tokens": 1000, "messages": [{"role": "system", "content": "hi"}], "stream": false}'
+
+
+###
+
+
+curl --request POST \
+  --url http://{{ip}}:{{port}}/v1/chat/completions \
+  --header 'Content-Type: application/json' \
+  --data '{
+	"model": "CHAT",
+	"messages": [
+		{
+			"role": "system",
+			"content": "hi"
+		},
+    {
+			"role": "user",
+			"content": "hi"
+		}
+	],
+	"stream": false,
+  "temperature": 0.7,
+	"max_tokens": 100,
+}'

@@ -1,4 +1,4 @@
-import { ArrowRight, ArrowsUpFromLine, ArrowRightToLine, ChartBar, Copy, Database, FilePlus, GitBranch, GitFork, GitMerge, Layers, Mail, MessageSquare, Server, Workflow } from 'lucide-react';
+import { ArrowRight, ArrowsUpFromLine, ArrowRightToLine, Bot, ChartBar, Copy, Database, FilePlus, GitBranch, GitFork, GitMerge, Layers, Mail, MessageSquare, Server, Workflow } from 'lucide-react';
 
 const nodeCategories = [
   {
@@ -15,6 +15,12 @@ const nodeCategories = [
       { type: 'conditional', name: 'If/Else 条件', icon: <GitFork size={20} /> },
       { type: 'fanIn', name: '扇入 (并行开始)', icon: <GitBranch size={20} /> },
       { type: 'fanOut', name: '扇出 (并行结束)', icon: <GitMerge size={20} /> }
+    ]
+  },
+  {
+    title: 'AI服务',
+    nodes: [
+      { type: 'llm', name: '大模型对话', icon: <Bot size={20} /> }
     ]
   },
   {

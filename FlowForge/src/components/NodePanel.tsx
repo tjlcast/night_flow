@@ -19,8 +19,12 @@ export default function NodePanel({
 }: NodePanelProps) {
   const [localLabel, setLocalLabel] = useState(node.data.label);
   const [localAction, setLocalAction] = useState(node.data.action || "未配置");
-  const [localInput, setLocalInput] = useState(node.data?.runtime?.input || "No input");
-  const [localOutput, setLocalOutput] = useState(node.data?.runtime?.input || "No output");
+  const [localInput, setLocalInput] = useState(
+    node.data?.runtime?.input || "No input"
+  );
+  const [localOutput, setLocalOutput] = useState(
+    node.data?.runtime?.input || "No output"
+  );
   const [localDescription, setLocalDescription] = useState(
     node.data.description || ""
   );
@@ -29,6 +33,16 @@ export default function NodePanel({
   );
   const [localParallelPaths, setLocalParallelPaths] = useState(
     node.data.parallelPaths || 3
+  );
+  const [localModel, setLocalModel] = useState(node.data.model || "CHAT");
+  const [localTemperature, setLocalTemperature] = useState(
+    node.data.temperature || 0
+  );
+  const [localMaxTokens, setLocalMaxTokens] = useState(
+    node.data.maxTokens || 0
+  );
+  const [localMessages, setLocalMessages] = useState(
+    node.data.messages || [{ role: "user", content: "" }]
   );
 
   useEffect(() => {
@@ -39,6 +53,11 @@ export default function NodePanel({
     setLocalParallelPaths(node.data.parallelPaths || 3);
     setLocalInput(node.data?.runtime?.input || "No input");
     setLocalOutput(node.data?.runtime?.output || "No output");
+
+    setLocalModel(node.data.model || "CHAT");
+    setLocalTemperature(node.data.temperature || 0);
+    setLocalMaxTokens(node.data.maxTokens || 0);
+    setLocalMessages(node.data.messages || [{ role: "user", content: "" }]);
   }, [node]);
 
   const handleSave = () => {
@@ -54,6 +73,13 @@ export default function NodePanel({
 
     if (node.data.type === "fanIn" || node.data.type === "fanOut") {
       updatedData.parallelPaths = parseInt(localParallelPaths.toString(), 10);
+    }
+
+    if (node.data.type === "llm") {
+      updatedData.model = localModel;
+      updatedData.temperature = parseFloat(localTemperature.toString());
+      updatedData.maxTokens = parseInt(localMaxTokens.toString(), 10);
+      updatedData.messages = localMessages;
     }
 
     updateNodeData(node.id, updatedData);
@@ -88,7 +114,6 @@ export default function NodePanel({
             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
           />
         </div>
-
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
             节点类型
@@ -97,7 +122,6 @@ export default function NodePanel({
             {node.data.type}
           </div>
         </div>
-
         {node.data.type === "conditional" && (
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -113,7 +137,6 @@ export default function NodePanel({
             />
           </div>
         )}
-
         {(node.data.type === "fanIn" || node.data.type === "fanOut") && (
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -149,7 +172,6 @@ export default function NodePanel({
             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
           />
         </div>
-
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
             描述
@@ -163,6 +185,114 @@ export default function NodePanel({
           />
         </div>
 
+        {/* // 在返回的JSX中添加LLM节点的配置表单 */}
+        {node.data.type === "llm" && (
+          <>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                模型
+              </label>
+              <select
+                value={localModel}
+                onChange={(e) => setLocalModel(e.target.value)}
+                onBlur={handleSave}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              >
+                <option value="CHAT">通用对话</option>
+                <option value="TEXT">文本生成</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                温度 (0-1)
+              </label>
+              <input
+                type="number"
+                min="0"
+                max="1"
+                step="0.1"
+                value={localTemperature}
+                onChange={(e) =>
+                  setLocalTemperature(parseFloat(e.target.value))
+                }
+                onBlur={handleSave}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                最大Token数 (0表示不限制)
+              </label>
+              <input
+                type="number"
+                min="0"
+                value={localMaxTokens}
+                onChange={(e) =>
+                  setLocalMaxTokens(parseInt(e.target.value, 10))
+                }
+                onBlur={handleSave}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                对话消息
+              </label>
+              {localMessages.map((msg: { role: string; content: string }, index: number) => (
+                <div key={index} className="mb-2">
+                  <select
+                    value={msg.role}
+                    onChange={(e) => {
+                      const newMessages = [...localMessages];
+                      newMessages[index].role = e.target.value;
+                      setLocalMessages(newMessages);
+                    }}
+                    className="w-full mb-1 px-2 py-1 border border-gray-300 rounded-md shadow-sm text-sm"
+                  >
+                    <option value="user">用户</option>
+                    <option value="assistant">助手</option>
+                    <option value="system">系统</option>
+                  </select>
+                  <textarea
+                    value={msg.content}
+                    onChange={(e) => {
+                      const newMessages = [...localMessages];
+                      newMessages[index].content = e.target.value;
+                      setLocalMessages(newMessages);
+                    }}
+                    rows={2}
+                    className="w-full px-2 py-1 border border-gray-300 rounded-md shadow-sm text-sm"
+                  />
+                  <button
+                    onClick={() => {
+                      setLocalMessages(
+                        localMessages.filter((_: any, i: number) => i !== index)
+                      );
+                    }}
+                    className="text-xs text-red-500 hover:text-red-700"
+                  >
+                    删除
+                  </button>
+                </div>
+              ))}
+              <button
+                onClick={() => {
+                  setLocalMessages([
+                    ...localMessages,
+                    { role: "user", content: "" },
+                  ]);
+                }}
+                className="mt-1 text-xs text-blue-500 hover:text-blue-700"
+              >
+                + 添加消息
+              </button>
+            </div>
+          </>
+        )}
+
         {!isDebugModel && (
           <div className="pt-2">
             <button
@@ -174,7 +304,6 @@ export default function NodePanel({
             </button>
           </div>
         )}
-
         {isDebugModel && (
           <div>
             <hr className="my-4" />

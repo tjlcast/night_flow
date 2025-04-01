@@ -1,6 +1,19 @@
-import { memo } from 'react';
-import { Handle, Position, NodeProps } from 'reactflow';
-import { ChartBar, Copy, Database, FilePlus, GitBranch, GitFork, GitMerge, Layers, Mail, MessageSquare, Server } from 'lucide-react';
+import { memo } from "react";
+import { Handle, Position, NodeProps } from "reactflow";
+import {
+  Bot,
+  ChartBar,
+  Copy,
+  Database,
+  FilePlus,
+  GitBranch,
+  GitFork,
+  GitMerge,
+  Layers,
+  Mail,
+  MessageSquare,
+  Server,
+} from "lucide-react";
 
 const nodeIcons: Record<string, JSX.Element> = {
   input: <FilePlus size={20} />,
@@ -13,22 +26,25 @@ const nodeIcons: Record<string, JSX.Element> = {
   messaging: <MessageSquare size={20} />,
   conditional: <GitFork size={20} />,
   fanIn: <GitBranch size={20} />,
-  fanOut: <GitMerge size={20} />
+  fanOut: <GitMerge size={20} />,
+  llm: <Bot size={20} />,
 };
 
 const CustomNode = ({ data, selected }: NodeProps) => {
   const icon = nodeIcons[data.type] || <Database size={20} />;
-  
+
   // Default number of outputs for fan-in and inputs for fan-out
   const parallelPaths = data.parallelPaths || 3;
-  
+
   return (
-    <div className={`
+    <div
+      className={`
       relative min-w-[150px] max-w-[250px] bg-white border-2 rounded-lg shadow-sm
-      ${selected ? 'border-blue-500 shadow-blue-100' : 'border-gray-200'}
-    `}>
+      ${selected ? "border-blue-500 shadow-blue-100" : "border-gray-200"}
+    `}
+    >
       {/* Default input handle */}
-      {data.type !== 'fanOut' ? (
+      {data.type !== "fanOut" ? (
         <Handle
           type="target"
           position={Position.Top}
@@ -37,7 +53,7 @@ const CustomNode = ({ data, selected }: NodeProps) => {
       ) : (
         // Multiple input handles for fan-out node
         Array.from({ length: parallelPaths }).map((_, i) => {
-          const position = 100 / (parallelPaths + 1) * (i + 1);
+          const position = (100 / (parallelPaths + 1)) * (i + 1);
           return (
             <Handle
               key={`in-${i}`}
@@ -47,58 +63,92 @@ const CustomNode = ({ data, selected }: NodeProps) => {
               className="w-3 h-3 bg-purple-500 border-2 border-white"
               style={{ left: `${position}%` }}
             />
-          )
+          );
         })
       )}
-      
+
       <div className="px-4 py-3">
         <div className="flex items-center mb-1">
           <div className="mr-2 text-gray-600">{icon}</div>
-          <span className="text-sm font-medium text-gray-800">{data.label}</span>
+          <span className="text-sm font-medium text-gray-800">
+            {data.label}
+          </span>
         </div>
         {data.action && (
           <div className="text-xs px-2 py-1 bg-gray-100 rounded-md text-gray-600 mt-1">
             {data.action}
           </div>
         )}
-        
+
         {data.condition && (
           <div className="text-xs px-2 py-1 bg-blue-50 rounded-md text-blue-600 mt-1 border border-blue-100">
             条件: {data.condition}
           </div>
         )}
 
-        {(data.type === 'fanIn' || data.type === 'fanOut') && (
+        {(data.type === "fanIn" || data.type === "fanOut") && (
           <div className="text-xs px-2 py-1 bg-purple-50 rounded-md text-purple-600 mt-1 border border-purple-100">
             并行路径: {data.parallelPaths || 3}
           </div>
         )}
+
+        {/* 添加LLM节点的特定信息显示 */}
+        {data.type === "llm" && (
+          <>
+            <div className="text-xs px-2 py-1 bg-green-50 rounded-md text-green-600 mt-1 border border-green-100">
+              模型: {data.model || "CHAT"}
+            </div>
+            <div className="text-xs px-2 py-1 bg-green-50 rounded-md text-green-600 mt-1 border border-green-100">
+              温度: {data.temperature || 0}
+            </div>
+            {data.runtime?.output && (
+              <div className="mt-2 p-2 bg-gray-50 rounded text-xs text-gray-600 border border-gray-200">
+                <div className="font-medium mb-1">AI回复:</div>
+                <div className="whitespace-pre-wrap">
+                  {typeof data.runtime.output === "string"
+                    ? data.runtime.output
+                    : JSON.stringify(data.runtime.output, null, 2)}
+                </div>
+              </div>
+            )}
+          </>
+        )}
       </div>
-      
-      {data.type === 'conditional' ? (
+
+      {data.type === "conditional" ? (
         <>
           <Handle
             id="true"
             type="source"
             position={Position.Bottom}
             className="w-3 h-3 bg-green-500 border-2 border-white"
-            style={{ left: '30%' }}
+            style={{ left: "30%" }}
           />
-          <div className="absolute text-xs text-green-600 font-medium" style={{ bottom: -5, left: '25%' }}>True</div>
-          
+          <div
+            className="absolute text-xs text-green-600 font-medium"
+            style={{ bottom: -5, left: "25%" }}
+          >
+            True
+          </div>
+
           <Handle
             id="false"
             type="source"
             position={Position.Bottom}
             className="w-3 h-3 bg-red-500 border-2 border-white"
-            style={{ left: '70%' }}
+            style={{ left: "70%" }}
           />
-          <div className="absolute text-xs text-red-600 font-medium" style={{ bottom: -5, left: '65%' }}>False</div>
+          <div
+            className="absolute text-xs text-red-600 font-medium"
+            style={{ bottom: -5, left: "65%" }}
+          >
+            False
+          </div>
         </>
-      ) : data.type === 'fanIn' ? (
+      ) : data.type === "fanIn" ? (
         // Multiple output handles for fan-in node
         Array.from({ length: parallelPaths }).map((_, i) => {
-          const position = 100 / (parallelPaths + 1) * (i + 1);
+          const position = (100 / (parallelPaths + 1)) * (i + 1);
           return (
             <Handle
               key={`out-${i}`}
@@ -108,9 +158,9 @@ const CustomNode = ({ data, selected }: NodeProps) => {
               className="w-3 h-3 bg-purple-500 border-2 border-white"
               style={{ left: `${position}%` }}
             />
-          )
+          );
         })
-      ) : data.type === 'fanOut' ? (
+      ) : data.type === "fanOut" ? (
         // Single output for fan-out
         <Handle
           type="source"
