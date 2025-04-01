@@ -106,26 +106,26 @@ function App() {
 
     // Add your workflow execution logic heres
     console.log("Running workflow...");
-    // Add your workflow execution logic here
-    nodes
-      .map((node) => ({
-        ...node,
-        data: {
-          ...node.data,
-          runtime: {
-            input: node.data.label,
-            output: node.data.label,
-          },
-        },
-      }))
-      .forEach((node) => {
-        updateNode(node.id, node.data);
-      });
+    // // Add your workflow execution logic here
+    // nodes
+    //   .map((node) => ({
+    //     ...node,
+    //     data: {
+    //       ...node.data,
+    //       runtime: {
+    //         input: node.data.label,
+    //         output: node.data.label,
+    //       },
+    //     },
+    //   }))
+    //   .forEach((node) => {
+    //     updateNode(node.id, node.data);
+    //   });
 
-    nodes[0]["style"] = { border: "1px solid red" };
-    nodes[1]["style"] = { border: "1px solid green" };
-    updateNodeStyle(nodes[0].id, nodes[0]["style"]);
-    updateNodeStyle(nodes[1].id, nodes[1]["style"]);
+    // nodes[0]["style"] = { border: "1px solid red" };
+    // nodes[1]["style"] = { border: "1px solid green" };
+    // updateNodeStyle(nodes[0].id, nodes[0]["style"]);
+    // updateNodeStyle(nodes[1].id, nodes[1]["style"]);
 
     console.log(JSON.stringify(nodes));
     console.log(JSON.stringify(edges));
