@@ -4,7 +4,11 @@ export class WorkflowWebSocket {
   private messageHandler: (message: any) => void;
   private url: string;
 
-  constructor(workflowId: string, private onOpenCallback?: () => void) {
+  constructor(
+    workflowId: string,
+    private onOpenCallback?: () => void,
+    private onCloseCallback?: () => void
+  ) {
     this.url = `ws://localhost:8000/workflow/runtime/${workflowId}`;
     this.messageHandler = () => {};
   }
@@ -28,6 +32,9 @@ export class WorkflowWebSocket {
 
     this.socket.onclose = () => {
       console.log("WebSocket closed");
+      if (this.onCloseCallback) {
+        this.onCloseCallback();
+      }
     };
 
     this.socket.onerror = (error) => {

@@ -8,6 +8,7 @@ import ImportWorkflowModal from "./components/ImportWorkflowModal";
 
 function App() {
   const [currentWorkflowId] = useState<string>("abc123");
+  const [isSocketConnected, setIsSocketConnected] = useState(false); // 新增socket状态标识workflow是否运行
   const [isImportModalOpen, setIsImportModalOpen] = useState<boolean>(false);
   const [socketInstance, setSocketInstance] =
     useState<WorkflowWebSocket | null>(null);
@@ -80,52 +81,40 @@ function App() {
   const handleRunWorkflow = () => {
     // 关闭现有连接
     socketInstance?.close();
+    setIsSocketConnected(true);
 
     // 清除所有 runtime 信息和样式
     handleCleanRuntimeAndStyle();
 
     // 创建新连接
-    const ws = new WorkflowWebSocket(currentWorkflowId, () => {
-      const workflowData = {
-        name: workflowName,
-        nodes: nodes,
-        edges: edges,
-        exportedAt: new Date().toISOString(),
-      };
-  
-      // Convert to JSON string
-      const jsonString = JSON.stringify(workflowData, null, 2);
+    const ws = new WorkflowWebSocket(
+      currentWorkflowId,
+      // 设置连接callback
+      () => {
+        const workflowData = {
+          name: workflowName,
+          nodes: nodes,
+          edges: edges,
+          exportedAt: new Date().toISOString(),
+        };
 
-      // 通过 WebSocket 发送工作流数据
-      if (!ws.send(jsonString)) {
-        console.error("Failed to send workflow data");
+        // Convert to JSON string
+        const jsonString = JSON.stringify(workflowData, null, 2);
+
+        // 通过 WebSocket 发送工作流数据
+        if (!ws.send(jsonString)) {
+          console.error("Failed to send workflow data");
+        }
+      },
+      // 设置断开callback
+      () => {
+        setIsSocketConnected(false);
       }
-    });
+    );
     ws.connect(handleRuntimeMessage);
     setSocketInstance(ws);
 
-    // Add your workflow execution logic heres
     console.log("Running workflow...");
-    // // Add your workflow execution logic here
-    // nodes
-    //   .map((node) => ({
-    //     ...node,
-    //     data: {
-    //       ...node.data,
-    //       runtime: {
-    //         input: node.data.label,
-    //         output: node.data.label,
-    //       },
-    //     },
-    //   }))
-    //   .forEach((node) => {
-    //     updateNode(node.id, node.data);
-    //   });
-
-    // nodes[0]["style"] = { border: "1px solid red" };
-    // nodes[1]["style"] = { border: "1px solid green" };
-    // updateNodeStyle(nodes[0].id, nodes[0]["style"]);
-    // updateNodeStyle(nodes[1].id, nodes[1]["style"]);
 
     console.log(JSON.stringify(nodes));
     console.log(JSON.stringify(edges));
@@ -176,6 +165,14 @@ function App() {
             />
           </div>
           <div className="flex space-x-2">
+            {/* 新增运行状态指示器 */}
+            {isDebugModel && isSocketConnected && (
+              <div className="flex items-center px-3 text-sm text-green-600">
+                <div className="w-2 h-2 rounded-full bg-green-500 mr-2"></div>
+                Running
+              </div>
+            )}
+
             <button
               onClick={() => {
                 setIsDebugModel((prevState) => !prevState);
