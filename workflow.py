@@ -254,12 +254,100 @@ class FanOutNode(Node):
 class APINode(Node):
     """API请求节点"""
 
+    def __init__(self, node_id: str, node_type: str, data: Dict[str, Any]):
+        super().__init__(node_id, node_type, data)
+        self.method = data.get('method', 'GET').upper()
+        self.url = data.get('url', '')
+        self.headers = data.get('headers', {})
+        self.body = data.get('body')
+        self.timeout = data.get('timeout', 10)  # 默认10秒超时
+
     def execute(self, context: WorkflowContext, input_data: Optional[Any] = None) -> List[Node]:
-        print(f"执行API节点 {self.label}，输入: {input_data}，action: {self.action}")
-        # 模拟API调用
-        output_data = {"api_response": f"API响应: {input_data}"}
-        context.current_data = output_data
-        context.record_execution(self.id, "completed", input_data, output_data)
+        print(f"执行API节点 {self.label}，输入: {input_data}")
+
+        try:
+            # 准备请求参数
+            request_kwargs = {
+                'method': self.method,
+                'url': self.url,
+                'headers': self.headers,
+                'timeout': self.timeout
+            }
+
+            # 添加请求体（如果是POST/PUT/PATCH等方法）
+            if self.method in ['POST', 'PUT', 'PATCH', 'DELETE'] and self.body:
+                if isinstance(self.body, dict):
+                    request_kwargs['json'] = self.body
+                else:
+                    try:
+                        # 尝试解析字符串形式的JSON
+                        json_body = json.loads(self.body)
+                        request_kwargs['json'] = json_body
+                    except json.JSONDecodeError:
+                        request_kwargs['data'] = self.body
+
+            # 执行API请求
+            response = requests.request(**request_kwargs)
+
+            # 处理响应
+            response.raise_for_status()  # 如果响应状态码不是200，抛出异常
+
+            try:
+                response_data = response.json()  # 尝试解析JSON响应
+            except ValueError:
+                response_data = response.text  # 如果不是JSON，返回原始文本
+
+            # 构建输出数据
+            output_data = {
+                'status_code': response.status_code,
+                'headers': dict(response.headers),
+                'data': response_data,
+                'request': {
+                    'method': self.method,
+                    'url': self.url,
+                    'headers': self.headers,
+                    'body': self.body
+                }
+            }
+
+            context.current_data = output_data
+            context.record_execution(
+                self.id, "completed", input_data, output_data)
+
+        except RequestException as e:
+            error_info = {
+                'error': str(e),
+                'request': {
+                    'method': self.method,
+                    'url': self.url,
+                    'headers': self.headers,
+                    'body': self.body
+                }
+            }
+            if hasattr(e, 'response') and e.response:
+                error_info['response'] = {
+                    'status_code': e.response.status_code,
+                    'content': e.response.text
+                }
+
+            context.current_data = error_info
+            context.record_execution(self.id, "failed", input_data, error_info)
+            raise  # 可以选择重新抛出异常或处理错误
+
+        except Exception as e:
+            error_info = {
+                'error': str(e),
+                'request': {
+                    'method': self.method,
+                    'url': self.url,
+                    'headers': self.headers,
+                    'body': self.body
+                }
+            }
+            context.current_data = error_info
+            context.record_execution(self.id, "failed", input_data, error_info)
+            raise  # 可以选择重新抛出异常或处理错误
+
         return self.next_nodes if self.next_nodes else []
 
 

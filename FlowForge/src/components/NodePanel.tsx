@@ -34,6 +34,8 @@ export default function NodePanel({
   const [localParallelPaths, setLocalParallelPaths] = useState(
     node.data.parallelPaths || 3
   );
+
+  // LLM
   const [localModel, setLocalModel] = useState(node.data.model || "CHAT");
   const [localTemperature, setLocalTemperature] = useState(
     node.data.temperature || 0
@@ -44,6 +46,18 @@ export default function NodePanel({
   const [localMessages, setLocalMessages] = useState(
     node.data.messages || [{ role: "user", content: "" }]
   );
+
+  // API
+  const [localMethod, setLocalMethod] = useState(node.data.method || "GET");
+  const [localUrl, setLocalUrl] = useState(
+    node.data.url || "http://localhost:8080"
+  );
+  const [localHeaders, setLocalHeaders] = useState(
+    node.data.headers || { "Content-Type": "application/json" }
+  );
+  const [localBody, setLocalBody] = useState(node.data.body || {});
+
+  // Debug
   const [showDebugInfo, setShowDebugInfo] = useState(false);
 
   useEffect(() => {
@@ -59,6 +73,11 @@ export default function NodePanel({
     setLocalTemperature(node.data.temperature || 0);
     setLocalMaxTokens(node.data.maxTokens || 0);
     setLocalMessages(node.data.messages || [{ role: "user", content: "" }]);
+
+    setLocalMethod(node.data.method || "GET");
+    setLocalUrl(node.data.url || "http://localhost:8080");
+    setLocalHeaders(node.data.headers || {});
+    setLocalBody(node.data.body || {});
   }, [node]);
 
   const handleSave = () => {
@@ -81,6 +100,13 @@ export default function NodePanel({
       updatedData.temperature = parseFloat(localTemperature.toString());
       updatedData.maxTokens = parseInt(localMaxTokens.toString(), 10);
       updatedData.messages = localMessages;
+    }
+
+    if (node.data.type === "api") {
+      updatedData.method = localMethod;
+      updatedData.url = localUrl;
+      updatedData.headers = localHeaders;
+      updatedData.body = localBody;
     }
 
     updateNodeData(node.id, updatedData);
@@ -304,6 +330,89 @@ export default function NodePanel({
                 + 添加消息
               </button>
             </div>
+          </>
+        )}
+
+        {/* API节点配置表单 */}
+        {node.data.type === "api" && (
+          <>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                请求方法
+              </label>
+              <select
+                value={localMethod}
+                onChange={(e) => setLocalMethod(e.target.value)}
+                onBlur={handleSave}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              >
+                <option value="GET">GET</option>
+                <option value="POST">POST</option>
+                <option value="PUT">PUT</option>
+                <option value="DELETE">DELETE</option>
+                <option value="PATCH">PATCH</option>
+              </select>
+            </div>
+
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                请求URL
+              </label>
+              <input
+                type="text"
+                value={localUrl}
+                onChange={(e) => setLocalUrl(e.target.value)}
+                onBlur={handleSave}
+                placeholder="https://api.example.com/endpoint"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              />
+            </div>
+
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                请求头
+              </label>
+              <textarea
+                value={JSON.stringify(localHeaders, null, 2)}
+                onChange={(e) => setLocalHeaders(e.target.value)}
+                onBlur={handleSave}
+                placeholder={
+                  '{\n  "Content-Type": "application/json",\n  "Authorization": "Bearer token"\n}'
+                }
+                rows={4}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm font-mono"
+              />
+            </div>
+
+            {localMethod !== "GET" && (
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  请求体
+                </label>
+                <textarea
+                  value={JSON.stringify(localBody, null, 2)}
+                  onChange={(e) => setLocalBody(e.target.value)}
+                  onBlur={handleSave}
+                  placeholder={'{\n  "key": "value"\n}'}
+                  rows={4}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm font-mono"
+                />
+              </div>
+            )}
+
+            {/* <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                超时时间(ms)
+              </label>
+              <input
+                type="number"
+                value={localTimeout}
+                onChange={(e) => setLocalTimeout(parseInt(e.target.value))}
+                onBlur={handleSave}
+                placeholder="5000"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              />
+            </div> */}
           </>
         )}
 

@@ -115,6 +115,58 @@ const CustomNode = ({ data, selected }: NodeProps) => {
         )}
       </div>
 
+      {/* 添加API节点的特定信息显示 */}
+      {data.type === "api" && (
+        <>
+          <div className="text-xs px-2 py-1 bg-green-50 rounded-md text-green-600 mt-1 border border-green-100">
+            METHOD: {data.method || "GET"}
+          </div>
+
+          <div className="text-xs px-2 py-1 bg-green-50 rounded-md text-green-600 mt-1 border border-green-100">
+            URL: {data.url}
+          </div>
+
+          {/* 美观的headers展示 */}
+          {data.headers && (
+            <div className="mt-2 p-2 bg-gray-50 rounded text-xs text-gray-600 border border-gray-200">
+              <div className="font-medium mb-1">请求头:</div>
+              <div className="space-y-1">
+                {Object.entries(data.headers).map(([key, value]) => (
+                  <div key={key} className="flex gap-2">
+                    <div className="font-semibold text-gray-700 min-w-[100px]">
+                      {key}:
+                    </div>
+                    <div className="text-gray-600 break-all">
+                      {typeof value === "string"
+                        ? value
+                        : JSON.stringify(value)}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {data.runtime?.output && (
+            <div className="mt-2 p-2 bg-gray-50 rounded text-xs text-gray-600 border border-gray-200">
+              <div className="font-medium mb-1">AI回复:</div>
+              <div className="whitespace-pre-wrap">
+                {typeof data.runtime.output === "string"
+                  ? data.runtime.output.length > 30
+                    ? data.runtime.output.substring(0, 30) + "……"
+                    : data.runtime.output
+                  : JSON.stringify(data.runtime.output, null, 2).length > 30
+                  ? JSON.stringify(data.runtime.output, null, 2).substring(
+                      0,
+                      30
+                    ) + "……"
+                  : JSON.stringify(data.runtime.output, null, 2)}
+              </div>
+            </div>
+          )}
+        </>
+      )}
+
       {data.type === "conditional" ? (
         <>
           <Handle

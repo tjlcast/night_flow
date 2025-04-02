@@ -50,6 +50,8 @@ export default function WorkflowEditorPage() {
       };
 
       loadWorkflow();
+    } else {
+      importWorkflow([], []);
     }
   }, [workflowId]);
 
@@ -58,7 +60,9 @@ export default function WorkflowEditorPage() {
     if (location.state?.workflowConfig) {
       const { name, nodes, edges } = location.state.workflowConfig;
       setWorkflowName(name);
-      importWorkflow(nodes, edges);
+      if (workflowId) {
+        importWorkflow(nodes, edges);
+      }
     }
   }, [location.state, importWorkflow]);
 
@@ -101,8 +105,6 @@ export default function WorkflowEditorPage() {
       // 解析响应体为 JSON 对象，获取新创建的工作流数据
       const newWorkflow = await response.json();
       return newWorkflow.id.toString();
-
-      return newWorkflow;
     } catch (err) {
       alert("Failed to create workflow. error: " + err);
       throw err;
@@ -317,7 +319,7 @@ export default function WorkflowEditorPage() {
 
             {!isDebugModel && (
               <button
-                onClick={() => {
+                onClick={ async () => {
                   const workflowData: Workflow = {
                     name: workflowName,
                     updated_at: new Date().toISOString(),
@@ -335,7 +337,8 @@ export default function WorkflowEditorPage() {
                   if (workflowId) {
                     updateWorkflow(workflowId, workflowData);
                   } else {
-                    createWorkflow(workflowData);
+                    const newWorkflowId = await createWorkflow(workflowData);
+                    navigate(`/workflow/${newWorkflowId}`);
                   }
                   // const jsonString = JSON.stringify(workflowData, null, 2);
                   // navigator.clipboard.writeText(jsonString);
