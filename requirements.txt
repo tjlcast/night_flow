@@ -8,6 +8,13 @@ click==8.1.8
 colorama==0.4.6
 Django==5.1.7
 django-post-office==3.9.1
+exceptiongroup==1.2.2
+fastapi==0.115.12
+h11==0.14.0
+httptools==0.6.4
+idna==3.10
+pinax-eventlog==5.1.1
+psutil==7.0.0
 pydantic==2.11.1
 pydantic_core==2.33.0
 python-dotenv==1.1.0

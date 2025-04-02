@@ -1,3 +1,5 @@
+import os
+from dotenv import load_dotenv
 import datetime
 import json
 import requests
@@ -88,6 +90,17 @@ class TransformNode(Node):
         return self.next_nodes if self.next_nodes else []
 
 
+# 获取模式（默认为空，表示使用 .env）
+env = os.getenv("APP_ENV", "")
+
+# 优先加载 .env.<mode>，如果不存在则加载 .env
+env_file = f".env.{env}" if env else ".env"
+load_dotenv(env_file)  # os.getenv("LLM_IP")
+
+LLM_IP = os.getenv("LLM_IP")
+LLM_PORT = os.getenv("LLM_PORT")
+
+
 class LLMNode(Node):
     """大模型对话节点"""
 
@@ -97,8 +110,8 @@ class LLMNode(Node):
         self.temperature = data.get('temperature', 0)
         self.max_tokens = data.get('maxTokens', 0)
         self.messages = data.get('messages', [])
-        self.ip = data.get('ip', '121.40.102.152')  # 默认IP
-        self.port = data.get('port', '9966')  # 默认端口
+        self.ip = data.get('ip', LLM_IP)  # 默认IP
+        self.port = data.get('port', LLM_PORT)  # 默认端口
 
     def execute(self, context: WorkflowContext, input_data: Optional[Any] = None) -> List[Node]:
         print(f"执行LLM节点 {self.label}，模型: {self.model}，温度: {self.temperature}")
@@ -114,7 +127,8 @@ class LLMNode(Node):
             }
 
             # 模拟API调用
-            print(f"发送LLM请求: {json.dumps(request_data, indent=2, ensure_ascii=False)}")
+            print(
+                f"发送LLM请求: {json.dumps(request_data, indent=2, ensure_ascii=False)}")
 
             # 这里应该是实际的API调用代码
             response = requests.post(f"http://{self.ip}:{self.port}/v1/chat/completions",
@@ -171,7 +185,8 @@ class ConditionalNode(Node):
             bool_ast = parse_expression(condition)
             evalucate_result = evaluate_ast(
                 bool_ast, {})
-            context.record_execution(self.id, "completed", input_data, evalucate_result)
+            context.record_execution(
+                self.id, "completed", input_data, evalucate_result)
 
             if evalucate_result:
                 print("条件为真，走true分支")
