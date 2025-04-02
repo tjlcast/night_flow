@@ -163,13 +163,21 @@ class ConditionalNode(Node):
     def __init__(self, node_id: str, node_type: str, data: Dict[str, Any]):
         super().__init__(node_id, node_type, data)
         self.condition = data["condition"]   # 默认条件为真，可以从data中获取实际条件
-        self.true_branch: Optional[Node] = None
-        self.false_branch: Optional[Node] = None
+        self.True_branch: List['Node'] = []
+        self.False_branch: List['Node'] = []
 
-    def set_branches(self, true_branch: Node, false_branch: Node):
+    def set_branches(self, True_branch: Node, False_branch: Node):
         """设置条件分支"""
-        self.true_branch = true_branch
-        self.false_branch = false_branch
+        self.True_branch.append(True_branch)
+        self.False_branch.append(False_branch)
+
+    def set_true_branche(self, True_branch: Node):
+        """设置条件分支"""
+        self.True_branch.append(True_branch)
+
+    def set_false_branche(self, False_branch: Node):
+        """设置条件分支"""
+        self.False_branch.append(False_branch)
 
     def execute(self, context: WorkflowContext, input_data: Optional[Any] = None) -> List[Node]:
         print(f"执行条件节点 {self.label}，输入: {input_data}，条件: {self.condition}")
@@ -183,11 +191,11 @@ class ConditionalNode(Node):
                 self.id, "completed", input_data, evalucate_result)
 
             if evalucate_result:
-                print("条件为真，走true分支")
-                return [self.true_branch] if self.true_branch else []
+                print("条件为真，走True分支")
+                return self.True_branch
             else:
-                print("条件为假，走false分支")
-                return [self.false_branch] if self.false_branch else []
+                print("条件为假，走False分支")
+                return self.False_branch
 
 
 class OutputNode(Node):
@@ -315,10 +323,10 @@ class Workflow:
             target_node = self.nodes[edge['target']]
 
             if isinstance(source_node, ConditionalNode):
-                if 'true' == edge['sourceHandle']:
-                    source_node.true_branch = target_node
-                elif 'false' == edge['sourceHandle']:
-                    source_node.false_branch = target_node
+                if 'true' == edge['sourceHandle'].lower():
+                    source_node.set_true_branche(target_node)
+                elif 'false' == edge['sourceHandle'].lower():
+                    source_node.set_false_branche(target_node)
             elif isinstance(source_node, FanInNode):
                 source_node.add_parallel_node(target_node)
             else:
@@ -518,8 +526,204 @@ def test1():
         "edges": [
             {"source": "1", "target": "2", "sourceHandle": None},
             {"source": "2", "target": "3", "sourceHandle": None},
-            {"source": "3", "target": "4", "sourceHandle": "true"}
+            {"source": "3", "target": "4", "sourceHandle": "True"}
         ]
+    }
+
+    # 创建并执行工作流
+    workflow = Workflow(example_workflow)
+    workflow.execute()
+
+    # 获取执行历史
+    history = workflow.get_execution_history()
+    print("\n详细的执行历史:")
+    print(json.dumps(history, indent=2, ensure_ascii=False))
+
+
+def test4():
+    import datetime
+
+    # 示例工作流JSON
+    example_workflow = {
+        "name": "Workflow undefined",
+        "nodes": [
+            {
+                "id": "node-85as0agz",
+                "type": "customNode",
+                "position": {
+                    "x": 900,
+                    "y": 105
+                },
+                "data": {
+                    "label": "大模型对话",
+                    "type": "llm",
+                    "action": "未配置",
+                    "description": "",
+                    "model": "CHAT",
+                    "temperature": 0,
+                    "maxTokens": 0,
+                    "messages": [
+                        {
+                            "role": "user",
+                            "content": "你好！"
+                        }
+                    ],
+                    "runtime": {
+                        "input": True,
+                        "isSuccess": True,
+                        "nodeId": "node-85as0agz",
+                        "output": "你好！有什么可以帮助你的吗？"
+                    }
+                },
+                "width": 225,
+                "height": 200,
+                "selected": False,
+                "positionAbsolute": {
+                    "x": 900,
+                    "y": 105
+                },
+                "dragging": False,
+                "style": {}
+            },
+            {
+                "id": "node-qs0sp0ib",
+                "type": "customNode",
+                "position": {
+                    "x": 735,
+                    "y": 105
+                },
+                "data": {
+                    "label": "大模型对话",
+                    "type": "llm",
+                    "action": "未配置",
+                    "description": "",
+                    "runtime": {
+                        "input": {
+                            "a": 1
+                        },
+                        "isSuccess": True,
+                        "nodeId": "node-qs0sp0ib",
+                        "output": "2"
+                    },
+                    "model": "CHAT",
+                    "temperature": 0,
+                    "maxTokens": 0,
+                    "messages": [
+                        {
+                            "role": "user",
+                            "content": "1+1=？"
+                        }
+                    ]
+                },
+                "width": 154,
+                "height": 200,
+                "selected": False,
+                "positionAbsolute": {
+                    "x": 735,
+                    "y": 105
+                },
+                "dragging": False,
+                "style": {}
+            },
+            {
+                "id": "node-x23yed1z",
+                "type": "customNode",
+                "position": {
+                    "x": 825,
+                    "y": -45
+                },
+                "data": {
+                    "label": "If/Else 条件",
+                    "type": "conditional",
+                    "action": "未配置",
+                    "description": "",
+                    "condition": "1 ==1",
+                    "runtime": {
+                        "input": "未配置",
+                        "isSuccess": True,
+                        "nodeId": "node-x23yed1z",
+                        "output": True
+                    }
+                },
+                "width": 150,
+                "height": 105,
+                "selected": False,
+                "positionAbsolute": {
+                    "x": 825,
+                    "y": -45
+                },
+                "dragging": False,
+                "style": {}
+            },
+            {
+                "id": "node-cgbxjszk",
+                "type": "customNode",
+                "position": {
+                    "x": 825,
+                    "y": -165
+                },
+                "data": {
+                    "label": "数据输入",
+                    "type": "input",
+                    "action": "未配置",
+                    "description": "",
+                    "runtime": {
+                        "input": None,
+                        "isSuccess": True,
+                        "nodeId": "node-cgbxjszk",
+                        "output": "未配置"
+                    }
+                },
+                "width": 150,
+                "height": 76,
+                "selected": True,
+                "positionAbsolute": {
+                    "x": 825,
+                    "y": -165
+                },
+                "dragging": False,
+                "style": {}
+            }
+        ],
+        "edges": [
+            {
+                "source": "node-x23yed1z",
+                "sourceHandle": "True",
+                "target": "node-qs0sp0ib",
+                "targetHandle": None,
+                "animated": True,
+                "style": {
+                    "stroke": "#555",
+                    "strokeWidth": 2
+                },
+                "id": "reactflow__edge-node-x23yed1zTrue-node-qs0sp0ib"
+            },
+            {
+                "source": "node-x23yed1z",
+                "sourceHandle": "True",
+                "target": "node-85as0agz",
+                "targetHandle": None,
+                "animated": True,
+                "style": {
+                    "stroke": "#555",
+                    "strokeWidth": 2
+                },
+                "id": "reactflow__edge-node-x23yed1zTrue-node-85as0agz"
+            },
+            {
+                "source": "node-cgbxjszk",
+                "sourceHandle": None,
+                "target": "node-x23yed1z",
+                "targetHandle": None,
+                "animated": True,
+                "style": {
+                    "stroke": "#555",
+                    "strokeWidth": 2
+                },
+                "id": "reactflow__edge-node-cgbxjszk-node-x23yed1z"
+            }
+        ],
+        "exportedAt": "2025-04-02T16:09:43.270Z"
     }
 
     # 创建并执行工作流
@@ -534,4 +738,4 @@ def test1():
 
 # 示例使用
 if __name__ == "__main__":
-    test3()
+    test4()
