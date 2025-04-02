@@ -89,3 +89,38 @@ curl --request POST \
   "temperature": 0.7,
 	"max_tokens": 100,
 }'
+
+### workflow http
+
+
+###
+# 创建workflow
+curl -X POST -H "Content-Type: application/json" -d '{"name":"Test Workflow","config":{"nodes":[],"edges":[]}}' http://localhost:8000/api/workflows/
+
+
+###
+# 获取所有workflows
+curl http://localhost:8000/api/workflows/
+
+
+
+###
+# 获取单个workflow
+curl http://localhost:8000/api/workflows/3
+
+
+
+###
+# 更新workflow
+curl -X PUT -H "Content-Type: application/json" -d '{"name":"Updated Workflow","config":{"nodes":[],"edges":[]}}' http://localhost:8000/api/workflows/3
+
+
+
+###
+# 删除workflow
+curl -X DELETE http://localhost:8000/api/workflows/1
+
+
+###
+# 按节点类型搜索
+curl http://localhost:8000/api/workflows/search/by_node_type/llm

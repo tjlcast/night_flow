@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI, WebSocket
 from threading import Event
 from fastapi.responses import HTMLResponse
+from workflow_db import router as workflow_router
 
 # 原有工作流相关代码保持不变，此处省略...
 # （将用户提供的所有类定义放在这里）
@@ -18,6 +19,7 @@ app.add_middleware(
     allow_methods=["GET", "POST", "PUT", "DELETE"],
     allow_headers=["Content-Type"],
 )
+app.include_router(workflow_router)
 
 executor = ThreadPoolExecutor()
 

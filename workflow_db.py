@@ -1,9 +1,11 @@
+from pydantic import BaseModel
+from typing import List
+from fastapi.responses import JSONResponse
+from fastapi import APIRouter, HTTPException, Depends, Response
+from contextlib import contextmanager
 import sqlite3
 import json
 from datetime import datetime
-
-
-from contextlib import contextmanager
 
 
 @contextmanager
@@ -359,3 +361,124 @@ if __name__ == "__main__":
         wfs = db.get_all_workflows()
         for wf in wfs:
             db.delete_workflow(wf["id"])
+
+
+router = APIRouter(
+    prefix="/api/workflows",
+    tags=["workflows"],
+    responses={404: {"description": "Not found"}},
+)
+
+# Pydantic模型用于请求和响应验证
+
+
+class WorkflowCreate(BaseModel):
+    name: str
+    config: dict
+
+
+class WorkflowUpdate(BaseModel):
+    name: str
+    config: dict
+
+
+class WorkflowResponse(BaseModel):
+    id: int
+    name: str
+    config: dict
+    created_at: str
+    updated_at: str
+    exported_at: str
+
+# 依赖项获取数据库连接
+
+
+def get_db():
+    with workflow_db() as db:
+        yield db
+
+
+@router.post("/", response_model=WorkflowResponse, status_code=201)
+def create_workflow(workflow: WorkflowCreate, db: WorkflowDB = Depends(get_db)):
+    """创建新的workflow"""
+    try:
+        workflow_data = {
+            "name": workflow.name,
+            "config": workflow.config,
+            "updatedAt": datetime.now().isoformat()
+        }
+        if "exportedAt" not in workflow.config:
+            workflow_data["config"]["exportedAt"] = datetime.now().isoformat()
+
+        workflow_id = db.insert_workflow(workflow_data)
+        created_workflow = db.get_workflow(workflow_id)
+
+        return JSONResponse(
+            status_code=201,
+            content=created_workflow
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/", response_model=List[WorkflowResponse])
+def list_workflows(db: WorkflowDB = Depends(get_db)):
+    """获取所有workflows"""
+    try:
+        workflows = db.get_all_workflows()
+        return workflows
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/{workflow_id}", response_model=WorkflowResponse)
+def get_workflow(workflow_id: int, db: WorkflowDB = Depends(get_db)):
+    """获取单个workflow详情"""
+    workflow = db.get_workflow(workflow_id)
+    if not workflow:
+        raise HTTPException(status_code=404, detail="Workflow not found")
+    return workflow
+
+
+@router.put("/{workflow_id}", response_model=WorkflowResponse)
+def update_workflow(workflow_id: int, workflow: WorkflowUpdate, db: WorkflowDB = Depends(get_db)):
+    """更新workflow"""
+    try:
+        existing = db.get_workflow(workflow_id)
+        if not existing:
+            raise HTTPException(status_code=404, detail="Workflow not found")
+
+        workflow_data = {
+            "id": workflow_id,
+            "name": workflow.name,
+            "config": workflow.config,
+            "updatedAt": datetime.now().isoformat()
+        }
+        if "exportedAt" not in workflow.config:
+            workflow_data["config"]["exportedAt"] = datetime.now().isoformat()
+
+        db.update_workflow(workflow_data)
+        updated_workflow = db.get_workflow(workflow_id)
+        return updated_workflow
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.delete("/{workflow_id}", status_code=204)
+def delete_workflow(workflow_id: int, db: WorkflowDB = Depends(get_db)):
+    """删除workflow"""
+    existing = db.get_workflow(workflow_id)
+    if not existing:
+        raise HTTPException(status_code=404, detail="Workflow not found")
+    db.delete_workflow(workflow_id)
+    return Response(status_code=204)
+
+
+@router.get("/search/by_node_type/{node_type}", response_model=List[WorkflowResponse])
+def search_by_node_type(node_type: str, db: WorkflowDB = Depends(get_db)):
+    """根据节点类型搜索workflows"""
+    try:
+        workflows = db.get_workflows_by_node_type(node_type)
+        return workflows
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
