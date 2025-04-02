@@ -1,0 +1,355 @@
+import sqlite3
+import json
+from datetime import datetime
+
+
+from contextlib import contextmanager
+
+
+@contextmanager
+def workflow_db(db_path='workflows.db'):
+    db = WorkflowDB(db_path)
+    try:
+        yield db
+    finally:
+        db.close()
+
+
+class WorkflowDB:
+    def __init__(self, db_path='workflows.db'):
+        self.conn = sqlite3.connect(db_path)
+        self.create_table()
+
+    def create_table(self):
+        """创建 workflow 表"""
+        query = """
+        CREATE TABLE IF NOT EXISTS workflows (
+            id TEXT PRIMARY KEY,
+            name TEXT NOT NULL,
+            config_json TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP,
+            exported_at TIMESTAMP
+        )
+        """
+        self.conn.execute(query)
+        self.conn.commit()
+
+    def insert_workflow(self, workflow):
+        """插入新 workflow"""
+        query = """
+        INSERT INTO workflows (id, name, config_json, updated_at, exported_at)
+        VALUES (?, ?, ?, ?, ?)
+        """
+        config_json = json.dumps(workflow['config'])
+        self.conn.execute(query, (
+            workflow['id'],
+            workflow['name'],
+            config_json,
+            workflow['updatedAt'],
+            workflow['config']['exportedAt']
+        ))
+        self.conn.commit()
+
+    def get_workflow(self, workflow_id):
+        """获取单个 workflow"""
+        query = "SELECT * FROM workflows WHERE id = ?"
+        cursor = self.conn.execute(query, (workflow_id,))
+        row = cursor.fetchone()
+
+        if row:
+            return {
+                'id': row[0],
+                'name': row[1],
+                'config': json.loads(row[2]),
+                'created_at': row[3],
+                'updated_at': row[4],
+                'exported_at': row[5]
+            }
+        return None
+
+    def get_all_workflows(self):
+        """获取所有 workflows"""
+        query = "SELECT * FROM workflows ORDER BY updated_at DESC"
+        cursor = self.conn.execute(query)
+
+        workflows = []
+        for row in cursor:
+            workflows.append({
+                'id': row[0],
+                'name': row[1],
+                'config': json.loads(row[2]),
+                'created_at': row[3],
+                'updated_at': row[4],
+                'exported_at': row[5]
+            })
+        return workflows
+
+    def update_workflow(self, workflow):
+        """更新 workflow"""
+        query = """
+        UPDATE workflows 
+        SET name = ?, config_json = ?, updated_at = ?, exported_at = ?
+        WHERE id = ?
+        """
+        config_json = json.dumps(workflow['config'])
+        updated_at = datetime.now().isoformat()  # 更新为当前时间
+
+        self.conn.execute(query, (
+            workflow['name'],
+            config_json,
+            updated_at,
+            workflow['config']['exportedAt'],
+            workflow['id']
+        ))
+        self.conn.commit()
+
+    def delete_workflow(self, workflow_id):
+        """删除 workflow"""
+        query = "DELETE FROM workflows WHERE id = ?"
+        self.conn.execute(query, (workflow_id,))
+        self.conn.commit()
+
+    def close(self):
+        """关闭数据库连接"""
+        self.conn.close()
+
+    def get_workflows_by_node_type(self, node_type):
+        """查询包含特定类型节点的 workflows"""
+        query = """
+        SELECT * FROM workflows 
+        WHERE json_extract(config_json, '$.nodes[*].data.type') LIKE ?
+        """
+        cursor = self.conn.execute(query, (f'%{node_type}%',))
+
+        workflows = []
+        for row in cursor:
+            workflows.append({
+                'id': row[0],
+                'name': row[1],
+                'config': json.loads(row[2]),
+                'created_at': row[3],
+                'updated_at': row[4],
+                'exported_at': row[5]
+            })
+        return workflows
+
+
+test_workflow_json = {
+    "id": "2",
+    "name": "Multiple LLMs",
+    "updatedAt": "2023-05-15",
+    "config": {
+        "name": "Multiple LLMs",
+        "nodes": [
+            {
+                "id": "node-oscmxd5c",
+                "type": "customNode",
+                "position": {
+                    "x": 360,
+                    "y": 135
+                },
+                "data": {
+                    "label": "数据输入",
+                    "type": "input",
+                    "action": "未配置",
+                    "description": "",
+                    "runtime": {
+                        "input": None,
+                        "isSuccess": True,
+                        "nodeId": "node-oscmxd5c",
+                        "output": "未配置"
+                    }
+                },
+                "width": 150,
+                "height": 76,
+                "style": {}
+            },
+            {
+                "id": "node-zdqwk4be",
+                "type": "customNode",
+                "position": {
+                    "x": 285,
+                    "y": 240
+                },
+                "data": {
+                    "label": "If/Else 条件",
+                    "type": "conditional",
+                    "action": "未配置",
+                    "description": "",
+                    "condition": "1 == 1",
+                    "runtime": {
+                        "input": "未配置",
+                        "isSuccess": True,
+                        "nodeId": "node-zdqwk4be",
+                        "output": True
+                    }
+                },
+                "width": 150,
+                "height": 105,
+                "selected": False,
+                "dragging": False,
+                "style": {}
+            },
+            {
+                "id": "node-xop8rnk4",
+                "type": "customNode",
+                "position": {
+                    "x": 195,
+                    "y": 375
+                },
+                "data": {
+                    "label": "大模型对话",
+                    "type": "llm",
+                    "action": "未配置",
+                    "description": "",
+                    "model": "CHAT",
+                    "temperature": 0,
+                    "maxTokens": 0,
+                    "messages": [
+                        {
+                            "role": "user",
+                            "content": "你好"
+                        }
+                    ],
+                    "runtime": {
+                        "input": True,
+                        "isSuccess": True,
+                        "nodeId": "node-xop8rnk4",
+                        "output": "你好！有什么可以帮助你的吗？"
+                    }
+                },
+                "width": 225,
+                "height": 200,
+                "selected": True,
+                "positionAbsolute": {
+                    "x": 195,
+                    "y": 375
+                },
+                "dragging": False,
+                "style": {}
+            },
+            {
+                "id": "node-s0ndjb3y",
+                "type": "customNode",
+                "position": {
+                    "x": 480,
+                    "y": 390
+                },
+                "data": {
+                    "label": "大模型对话",
+                    "type": "llm",
+                    "action": "未配置",
+                    "description": "",
+                    "model": "CHAT",
+                    "temperature": 0,
+                    "maxTokens": 0,
+                    "messages": [
+                        {
+                            "role": "user",
+                            "content": "你是谁？"
+                        }
+                    ]
+                },
+                "width": 150,
+                "height": 135,
+                "selected": False,
+                "positionAbsolute": {
+                    "x": 480,
+                    "y": 390
+                },
+                "dragging": False,
+                "style": {}
+            }
+        ],
+        "edges": [
+            {
+                "source": "node-zdqwk4be",
+                "sourceHandle": "true",
+                "target": "node-xop8rnk4",
+                "targetHandle": None,
+                "animated": True,
+                "style": {
+                    "stroke": "#555",
+                    "strokeWidth": 2
+                },
+                "id": "reactflow__edge-node-zdqwk4betrue-node-xop8rnk4"
+            },
+            {
+                "source": "node-zdqwk4be",
+                "sourceHandle": "false",
+                "target": "node-s0ndjb3y",
+                "targetHandle": None,
+                "animated": True,
+                "style": {
+                    "stroke": "#555",
+                    "strokeWidth": 2
+                },
+                "id": "reactflow__edge-node-zdqwk4befalse-node-s0ndjb3y"
+            },
+            {
+                "source": "node-oscmxd5c",
+                "sourceHandle": None,
+                "target": "node-zdqwk4be",
+                "targetHandle": None,
+                "animated": True,
+                "style": {
+                    "stroke": "#555",
+                    "strokeWidth": 2
+                },
+                "id": "reactflow__edge-node-oscmxd5c-node-zdqwk4be"
+            }
+        ],
+        "exportedAt": "2025-04-01T15:14:50.562Z"
+    }
+}
+
+
+# 使用示例
+if __name__ == "__main__":
+    # 示例 workflow 数据 (简化版)
+    example_workflow = {
+        "id": "1",
+        "name": "Multiple LLMs",
+        "updatedAt": "2023-05-15",
+        "config": {
+            "name": "Multiple LLMs",
+            "nodes": [],
+            "edges": [],
+            "exportedAt": "2025-04-01T15:14:50.562Z"
+        }
+    }
+
+    # 初始化数据库
+    db = WorkflowDB()
+
+    # 1. 插入 workflow
+    db.insert_workflow(example_workflow)
+    print("插入 workflow 成功")
+
+    # 2. 查询单个 workflow
+    workflow = db.get_workflow("1")
+    print("查询结果:", workflow['name'])
+
+    # 3. 更新 workflow
+    example_workflow['name'] = "Updated Workflow"
+    db.update_workflow(example_workflow)
+    print("更新 workflow 成功")
+
+    # 4. 查询所有 workflows
+    db.insert_workflow(test_workflow_json)
+    all_workflows = db.get_all_workflows()
+    print(f"共有 {len(all_workflows)} 个 workflows")
+
+    # 5. 删除 workflow
+    db.delete_workflow("1")
+    print("删除 workflow 成功")
+
+    # 关闭连接
+    db.close()
+
+    # 使用方式
+    with workflow_db() as db:
+        workflows = db.get_all_workflows()
+        wfs = db.get_all_workflows()
+        db.delete_workflow(wfs[0]["id"])
