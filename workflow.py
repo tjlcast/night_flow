@@ -7,6 +7,7 @@ from abc import ABC, abstractmethod
 from typing import Dict, Any, Optional, List, Set
 from collections import deque
 from workflow_utils import parse_string_2_multi
+from multienv import multienv
 
 
 from workflow_bool_eval import evaluate_ast, evaluate_expression, parse_expression
@@ -90,15 +91,8 @@ class TransformNode(Node):
         return self.next_nodes if self.next_nodes else []
 
 
-# 获取模式（默认为空，表示使用 .env）
-env = os.getenv("APP_ENV", "")
-
-# 优先加载 .env.<mode>，如果不存在则加载 .env
-env_file = f".env.{env}" if env else ".env"
-load_dotenv(env_file)  # os.getenv("LLM_IP")
-
-LLM_IP = os.getenv("LLM_IP")
-LLM_PORT = os.getenv("LLM_PORT")
+LLM_IP = multienv.get("LLM_IP")
+LLM_PORT = multienv.get("LLM_PORT")
 
 
 class LLMNode(Node):
