@@ -7,6 +7,8 @@ import "./index.css";
 import { useWorkflowStore } from "./store/workflowStore";
 import { WorkflowWebSocket } from "./utils/websocket";
 import { ImportWorkflowModal } from "./components/ImportWorkflowModal";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 interface Workflow {
   id: string;
@@ -247,6 +249,19 @@ export default function WorkflowEditorPage() {
 
   return (
     <div className="flex flex-col h-screen bg-gray-50">
+      {/* 气泡 */}
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
       <header className="bg-white shadow-sm border-b border-gray-200">
         <div className="px-4 py-3 flex items-center justify-between">
           <div className="flex items-center">
@@ -319,7 +334,7 @@ export default function WorkflowEditorPage() {
 
             {!isDebugModel && (
               <button
-                onClick={ async () => {
+                onClick={async () => {
                   const workflowData: Workflow = {
                     name: workflowName,
                     updated_at: new Date().toISOString(),
@@ -334,15 +349,44 @@ export default function WorkflowEditorPage() {
                     exported_at: "",
                   };
 
-                  if (workflowId) {
-                    updateWorkflow(workflowId, workflowData);
-                  } else {
-                    const newWorkflowId = await createWorkflow(workflowData);
-                    navigate(`/workflow/${newWorkflowId}`);
+                  try {
+                    if (workflowId) {
+                      await updateWorkflow(workflowId, workflowData);
+                      toast.success("工作流更新成功!", {
+                        position: "top-right",
+                        autoClose: 3000,
+                        hideProgressBar: false,
+                        closeOnClick: true,
+                        pauseOnHover: true,
+                        draggable: true,
+                        progress: undefined,
+                      });
+                    } else {
+                      const newWorkflowId = await createWorkflow(workflowData);
+                      toast.success("工作流创建成功!", {
+                        position: "top-right",
+                        autoClose: 3000,
+                        hideProgressBar: false,
+                        closeOnClick: true,
+                        pauseOnHover: true,
+                        draggable: true,
+                        progress: undefined,
+                      });
+                      navigate(`/workflow/${newWorkflowId}`);
+                    }
+                    // const jsonString = JSON.stringify(workflowData, null, 2);
+                    // navigator.clipboard.writeText(jsonString);
+                  } catch (error) {
+                    toast.error("保存失败: " + error, {
+                      position: "top-right",
+                      autoClose: 5000,
+                      hideProgressBar: false,
+                      closeOnClick: true,
+                      pauseOnHover: true,
+                      draggable: true,
+                      progress: undefined,
+                    });
                   }
-                  // const jsonString = JSON.stringify(workflowData, null, 2);
-                  // navigator.clipboard.writeText(jsonString);
-                  alert("Saved...");
                 }}
                 className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
               >
@@ -365,7 +409,6 @@ export default function WorkflowEditorPage() {
       <div className="flex-1 overflow-hidden">
         <WorkflowEditor isDebugModel={isDebugModel} />
       </div>
-
       {isImportModalOpen && (
         <ImportWorkflowModal
           isOpen={isImportModalOpen}
@@ -373,7 +416,6 @@ export default function WorkflowEditorPage() {
           onImport={handleImportWorkflow}
         />
       )}
-
       {isExportModalOpen && (
         <ImportWorkflowModal
           isOpen={isExportModalOpen}
