@@ -10,7 +10,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Dashboard />} />
         <Route path="/workflow/new" element={<WorkflowEditorPage />} />
-        <Route path="/workflow/:id" element={<WorkflowEditorPage />} />
+        <Route path="/workflow/:workflowId" element={<WorkflowEditorPage />} />
         <Route path="/machine-manager" element={<MachineManager />} />
       </Routes>
     </Router>

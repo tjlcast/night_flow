@@ -1,7 +1,8 @@
 // Dashboard.tsx
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Plus, Trash2, Edit, Server } from "lucide-react";
+import { create } from "zustand";
 
 interface Workflow {
   id: string;
@@ -11,200 +12,419 @@ interface Workflow {
 }
 
 export default function Dashboard() {
+  // const [workflows, setWorkflows] = useState<Workflow[]>([]);
   const [workflows, setWorkflows] = useState<Workflow[]>([
-    {
-      id: "1",
-      name: "Multiple LLMs",
-      updatedAt: "2023-05-15",
-      config: {
-        name: "Multiple LLMs",
-        nodes: [
-          {
-            id: "node-oscmxd5c",
-            type: "customNode",
-            position: {
-              x: 360,
-              y: 135,
-            },
-            data: {
-              label: "数据输入",
-              type: "input",
-              action: "未配置",
-              description: "",
-              runtime: {
-                input: null,
-                isSuccess: true,
-                nodeId: "node-oscmxd5c",
-                output: "未配置",
-              },
-            },
-            width: 150,
-            height: 76,
-            style: {},
-          },
-          {
-            id: "node-zdqwk4be",
-            type: "customNode",
-            position: {
-              x: 285,
-              y: 240,
-            },
-            data: {
-              label: "If/Else 条件",
-              type: "conditional",
-              action: "未配置",
-              description: "",
-              condition: "1 == 1",
-              runtime: {
-                input: "未配置",
-                isSuccess: true,
-                nodeId: "node-zdqwk4be",
-                output: true,
-              },
-            },
-            width: 150,
-            height: 105,
-            selected: false,
-            dragging: false,
-            style: {},
-          },
-          {
-            id: "node-xop8rnk4",
-            type: "customNode",
-            position: {
-              x: 195,
-              y: 375,
-            },
-            data: {
-              label: "大模型对话",
-              type: "llm",
-              action: "未配置",
-              description: "",
-              model: "CHAT",
-              temperature: 0,
-              maxTokens: 0,
-              messages: [
-                {
-                  role: "user",
-                  content: "你好",
-                },
-              ],
-              runtime: {
-                input: true,
-                isSuccess: true,
-                nodeId: "node-xop8rnk4",
-                output: "你好！有什么可以帮助你的吗？",
-              },
-            },
-            width: 225,
-            height: 200,
-            selected: true,
-            positionAbsolute: {
-              x: 195,
-              y: 375,
-            },
-            dragging: false,
-            style: {},
-          },
-          {
-            id: "node-s0ndjb3y",
-            type: "customNode",
-            position: {
-              x: 480,
-              y: 390,
-            },
-            data: {
-              label: "大模型对话",
-              type: "llm",
-              action: "未配置",
-              description: "",
-              model: "CHAT",
-              temperature: 0,
-              maxTokens: 0,
-              messages: [
-                {
-                  role: "user",
-                  content: "你是谁？",
-                },
-              ],
-            },
-            width: 150,
-            height: 135,
-            selected: false,
-            positionAbsolute: {
-              x: 480,
-              y: 390,
-            },
-            dragging: false,
-            style: {},
-          },
-        ],
-        edges: [
-          {
-            source: "node-zdqwk4be",
-            sourceHandle: "true",
-            target: "node-xop8rnk4",
-            targetHandle: null,
-            animated: true,
-            style: {
-              stroke: "#555",
-              strokeWidth: 2,
-            },
-            id: "reactflow__edge-node-zdqwk4betrue-node-xop8rnk4",
-          },
-          {
-            source: "node-zdqwk4be",
-            sourceHandle: "false",
-            target: "node-s0ndjb3y",
-            targetHandle: null,
-            animated: true,
-            style: {
-              stroke: "#555",
-              strokeWidth: 2,
-            },
-            id: "reactflow__edge-node-zdqwk4befalse-node-s0ndjb3y",
-          },
-          {
-            source: "node-oscmxd5c",
-            sourceHandle: null,
-            target: "node-zdqwk4be",
-            targetHandle: null,
-            animated: true,
-            style: {
-              stroke: "#555",
-              strokeWidth: 2,
-            },
-            id: "reactflow__edge-node-oscmxd5c-node-zdqwk4be",
-          },
-        ],
-        exportedAt: "2025-04-01T15:14:50.562Z",
-      },
-    },
-    {
-      id: "2",
-      name: "Data Processing",
-      updatedAt: "2023-05-10",
-      config: {
-        name: "Data Processing",
-        nodes: [],
-        edges: [],
-      },
-    },
-    {
-      id: "3",
-      name: "Customer Onboarding",
-      updatedAt: "2023-05-01",
-      config: {
-        name: "Customer Onboarding",
-        nodes: [],
-        edges: [],
-      },
-    },
+    // {
+    //   id: "1",
+    //   name: "Multiple LLMs",
+    //   updatedAt: "2023-05-15",
+    //   config: {
+    //     name: "Multiple LLMs",
+    //     nodes: [
+    //       {
+    //         id: "node-oscmxd5c",
+    //         type: "customNode",
+    //         position: {
+    //           x: 360,
+    //           y: 135,
+    //         },
+    //         data: {
+    //           label: "数据输入",
+    //           type: "input",
+    //           action: "未配置",
+    //           description: "",
+    //           runtime: {
+    //             input: null,
+    //             isSuccess: true,
+    //             nodeId: "node-oscmxd5c",
+    //             output: "未配置",
+    //           },
+    //         },
+    //         width: 150,
+    //         height: 76,
+    //         style: {},
+    //       },
+    //       {
+    //         id: "node-zdqwk4be",
+    //         type: "customNode",
+    //         position: {
+    //           x: 285,
+    //           y: 240,
+    //         },
+    //         data: {
+    //           label: "If/Else 条件",
+    //           type: "conditional",
+    //           action: "未配置",
+    //           description: "",
+    //           condition: "1 == 1",
+    //           runtime: {
+    //             input: "未配置",
+    //             isSuccess: true,
+    //             nodeId: "node-zdqwk4be",
+    //             output: true,
+    //           },
+    //         },
+    //         width: 150,
+    //         height: 105,
+    //         selected: false,
+    //         dragging: false,
+    //         style: {},
+    //       },
+    //       {
+    //         id: "node-xop8rnk4",
+    //         type: "customNode",
+    //         position: {
+    //           x: 195,
+    //           y: 375,
+    //         },
+    //         data: {
+    //           label: "大模型对话",
+    //           type: "llm",
+    //           action: "未配置",
+    //           description: "",
+    //           model: "CHAT",
+    //           temperature: 0,
+    //           maxTokens: 0,
+    //           messages: [
+    //             {
+    //               role: "user",
+    //               content: "你好",
+    //             },
+    //           ],
+    //           runtime: {
+    //             input: true,
+    //             isSuccess: true,
+    //             nodeId: "node-xop8rnk4",
+    //             output: "你好！有什么可以帮助你的吗？",
+    //           },
+    //         },
+    //         width: 225,
+    //         height: 200,
+    //         selected: true,
+    //         positionAbsolute: {
+    //           x: 195,
+    //           y: 375,
+    //         },
+    //         dragging: false,
+    //         style: {},
+    //       },
+    //       {
+    //         id: "node-s0ndjb3y",
+    //         type: "customNode",
+    //         position: {
+    //           x: 480,
+    //           y: 390,
+    //         },
+    //         data: {
+    //           label: "大模型对话",
+    //           type: "llm",
+    //           action: "未配置",
+    //           description: "",
+    //           model: "CHAT",
+    //           temperature: 0,
+    //           maxTokens: 0,
+    //           messages: [
+    //             {
+    //               role: "user",
+    //               content: "你是谁？",
+    //             },
+    //           ],
+    //         },
+    //         width: 150,
+    //         height: 135,
+    //         selected: false,
+    //         positionAbsolute: {
+    //           x: 480,
+    //           y: 390,
+    //         },
+    //         dragging: false,
+    //         style: {},
+    //       },
+    //     ],
+    //     edges: [
+    //       {
+    //         source: "node-zdqwk4be",
+    //         sourceHandle: "true",
+    //         target: "node-xop8rnk4",
+    //         targetHandle: null,
+    //         animated: true,
+    //         style: {
+    //           stroke: "#555",
+    //           strokeWidth: 2,
+    //         },
+    //         id: "reactflow__edge-node-zdqwk4betrue-node-xop8rnk4",
+    //       },
+    //       {
+    //         source: "node-zdqwk4be",
+    //         sourceHandle: "false",
+    //         target: "node-s0ndjb3y",
+    //         targetHandle: null,
+    //         animated: true,
+    //         style: {
+    //           stroke: "#555",
+    //           strokeWidth: 2,
+    //         },
+    //         id: "reactflow__edge-node-zdqwk4befalse-node-s0ndjb3y",
+    //       },
+    //       {
+    //         source: "node-oscmxd5c",
+    //         sourceHandle: null,
+    //         target: "node-zdqwk4be",
+    //         targetHandle: null,
+    //         animated: true,
+    //         style: {
+    //           stroke: "#555",
+    //           strokeWidth: 2,
+    //         },
+    //         id: "reactflow__edge-node-oscmxd5c-node-zdqwk4be",
+    //       },
+    //     ],
+    //     exportedAt: "2025-04-01T15:14:50.562Z",
+    //   },
+    // },
+    // {
+    //   id: "2",
+    //   name: "Data Processing",
+    //   updatedAt: "2023-05-10",
+    //   config: {
+    //     name: "Data Processing",
+    //     nodes: [],
+    //     edges: [],
+    //   },
+    // },
+    // {
+    //   id: "3",
+    //   name: "Customer Onboarding",
+    //   updatedAt: "2023-05-01",
+    //   config: {
+    //     name: "Customer Onboarding",
+    //     nodes: [],
+    //     edges: [],
+    //   },
+    // },
   ]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // load workflow from db
+  useEffect(() => {
+    const fetchWorkflows = async () => {
+      try {
+        setLoading(true);
+
+        // Fetch all workflows
+        const response = await fetch("http://localhost:8000/api/workflows/");
+        if (!response.ok) {
+          throw new Error("Failed to fetch workflows");
+        }
+        const data = await response.json();
+
+        // Transform the API response to match your frontend structure
+        const transformedWorkflows = data.map((workflow: any) => ({
+          id: workflow.id.toString(),
+          name: workflow.name,
+          updatedAt: workflow.updated_at,
+          config: {
+            ...workflow.config,
+            name: workflow.name,
+            exportedAt: workflow.config.exportedAt || workflow.exported_at,
+          },
+        }));
+
+        // const updatedWorkFlows = [...workflows, ...transformedWorkflows];
+        const updatedWorkFlows = transformedWorkflows;
+        setWorkflows(updatedWorkFlows);
+        setError(null);
+      } catch (err) {
+        setError(
+          err instanceof Error ? err.message : "An unknown error occurred"
+        );
+        // Fallback to initial data if API fails
+        setWorkflows([
+          {
+            id: "1",
+            name: "Multiple LLMs",
+            updatedAt: "2023-05-15",
+            config: {
+              name: "Multiple LLMs",
+              nodes: [
+                {
+                  id: "node-oscmxd5c",
+                  type: "customNode",
+                  position: { x: 360, y: 135 },
+                  data: {
+                    label: "数据输入",
+                    type: "input",
+                    action: "未配置",
+                    description: "",
+                    runtime: {
+                      input: null,
+                      isSuccess: true,
+                      nodeId: "node-oscmxd5c",
+                      output: "未配置",
+                    },
+                  },
+                  width: 150,
+                  height: 76,
+                  style: {},
+                },
+                {
+                  id: "node-zdqwk4be",
+                  type: "customNode",
+                  position: { x: 285, y: 240 },
+                  data: {
+                    label: "If/Else 条件",
+                    type: "conditional",
+                    action: "未配置",
+                    description: "",
+                    condition: "1 == 1",
+                    runtime: {
+                      input: "未配置",
+                      isSuccess: true,
+                      nodeId: "node-zdqwk4be",
+                      output: true,
+                    },
+                  },
+                  width: 150,
+                  height: 105,
+                  selected: false,
+                  dragging: false,
+                  style: {},
+                },
+                {
+                  id: "node-xop8rnk4",
+                  type: "customNode",
+                  position: { x: 195, y: 375 },
+                  data: {
+                    label: "大模型对话",
+                    type: "llm",
+                    action: "未配置",
+                    description: "",
+                    model: "CHAT",
+                    temperature: 0,
+                    maxTokens: 0,
+                    messages: [{ role: "user", content: "你好" }],
+                    runtime: {
+                      input: true,
+                      isSuccess: true,
+                      nodeId: "node-xop8rnk4",
+                      output: "你好！有什么可以帮助你的吗？",
+                    },
+                  },
+                  width: 225,
+                  height: 200,
+                  selected: true,
+                  positionAbsolute: { x: 195, y: 375 },
+                  dragging: false,
+                  style: {},
+                },
+                {
+                  id: "node-s0ndjb3y",
+                  type: "customNode",
+                  position: { x: 480, y: 390 },
+                  data: {
+                    label: "大模型对话",
+                    type: "llm",
+                    action: "未配置",
+                    description: "",
+                    model: "CHAT",
+                    temperature: 0,
+                    maxTokens: 0,
+                    messages: [{ role: "user", content: "你是谁？" }],
+                  },
+                  width: 150,
+                  height: 135,
+                  selected: false,
+                  positionAbsolute: { x: 480, y: 390 },
+                  dragging: false,
+                  style: {},
+                },
+              ],
+              edges: [
+                {
+                  source: "node-zdqwk4be",
+                  sourceHandle: "true",
+                  target: "node-xop8rnk4",
+                  targetHandle: null,
+                  animated: true,
+                  style: { stroke: "#555", strokeWidth: 2 },
+                  id: "reactflow__edge-node-zdqwk4betrue-node-xop8rnk4",
+                },
+                {
+                  source: "node-zdqwk4be",
+                  sourceHandle: "false",
+                  target: "node-s0ndjb3y",
+                  targetHandle: null,
+                  animated: true,
+                  style: { stroke: "#555", strokeWidth: 2 },
+                  id: "reactflow__edge-node-zdqwk4befalse-node-s0ndjb3y",
+                },
+                {
+                  source: "node-oscmxd5c",
+                  sourceHandle: null,
+                  target: "node-zdqwk4be",
+                  targetHandle: null,
+                  animated: true,
+                  style: { stroke: "#555", strokeWidth: 2 },
+                  id: "reactflow__edge-node-oscmxd5c-node-zdqwk4be",
+                },
+              ],
+              exportedAt: "2025-04-01T15:14:50.562Z",
+            },
+          },
+          {
+            id: "2",
+            name: "Data Processing",
+            updatedAt: "2023-05-10",
+            config: { name: "Data Processing", nodes: [], edges: [] },
+          },
+          {
+            id: "3",
+            name: "Customer Onboarding",
+            updatedAt: "2023-05-01",
+            config: { name: "Customer Onboarding", nodes: [], edges: [] },
+          },
+        ]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchWorkflows();
+  }, []);
+
+  // delete workflow from db
+  // Function to delete a workflow
+  const deleteWorkflow = async (id: string) => {
+    try {
+      const response = await fetch(
+        `http://localhost:8000/api/workflows/${id}`,
+        {
+          method: "DELETE",
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to delete workflow");
+      }
+
+      setWorkflows((prev) => prev.filter((w) => w.id !== id));
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Failed to delete workflow"
+      );
+      throw err;
+    }
+  };
 
   const navigate = useNavigate();
 
   const handleDeleteWorkflow = (id: string) => {
+    try {
+      deleteWorkflow(id);
+    } catch (err) {
+      console.error(err);
+    }
     setWorkflows(workflows.filter((workflow) => workflow.id !== id));
   };
 
@@ -238,6 +458,44 @@ export default function Dashboard() {
               <Plus size={16} className="mr-2" />
               New Workflow
             </Link>
+            {/* <Link
+              to="/workflow/new"
+              className="flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors"
+              onClick={(e) => {
+                e.preventDefault(); // 阻止默认跳转行为
+                // 准备要创建的工作流数据
+                const newWorkflowData = {
+                  name: "New Workflow Example",
+                  updatedAt: new Date().toISOString(),
+                  config: {
+                    name: "New Workflow Example",
+                    nodes: [
+                      {
+                        id: "node-1",
+                        type: "customNode",
+                        position: { x: 100, y: 100 },
+                        data: {
+                          label: "New Node",
+                          type: "input",
+                          action: "未配置",
+                          description: "",
+                        },
+                        width: 150,
+                        height: 76,
+                      },
+                    ],
+                    edges: [],
+                    exportedAt: new Date().toISOString(),
+                  },
+                };
+                createWorkflow(newWorkflowData);
+                // createWorkflow(newWorkflowData); // 调用你的函
+                // window.location.href = "/workflow/new"; // 手动跳转
+              }}
+            >
+              <Plus size={16} className="mr-2" />
+              New Workflow
+            </Link> */}
           </div>
         </div>
       </div>
@@ -299,7 +557,11 @@ export default function Dashboard() {
           <div className="bg-white rounded-lg p-6 max-w-md w-full">
             <h3 className="text-lg font-semibold mb-4">关于 jialtang</h3>
             <p className="mb-4">
-            jialtang写的？什么鬼！大模型写的！<br />赞美Deepseek！<br />赞美太阳！
+              jialtang写的？什么鬼！大模型写的！
+              <br />
+              赞美Deepseek！
+              <br />
+              赞美太阳！
             </p>
             <div className="flex justify-end">
               <button

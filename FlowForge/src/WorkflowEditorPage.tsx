@@ -8,6 +8,15 @@ import { useWorkflowStore } from "./store/workflowStore";
 import { WorkflowWebSocket } from "./utils/websocket";
 import { ImportWorkflowModal } from "./components/ImportWorkflowModal";
 
+interface Workflow {
+  id: string;
+  name: string;
+  updated_at: string;
+  created_at: string;
+  exported_at: string;
+  config: any;
+}
+
 export default function WorkflowEditorPage() {
   const { workflowId } = useParams();
   const navigate = useNavigate();
@@ -25,6 +34,25 @@ export default function WorkflowEditorPage() {
   const { nodes, edges, updateNode, updateNodeStyle, importWorkflow } =
     useWorkflowStore();
 
+  useEffect(() => {
+    if (workflowId) {
+      const loadWorkflow = async () => {
+        try {
+          const fetchedWorkflow = await fetchWorkflow(workflowId);
+          setWorkflowName(fetchedWorkflow.name);
+          fetchedWorkflow.config.nodes.forEach((node: any) => {
+            updateNode(node.id, node.data);
+          });
+        } catch (err) {
+          console.error("Failed to load workflow:", err);
+          alert("Failed to load workflow:" + workflowId + " error: " + err);
+        }
+      };
+
+      loadWorkflow();
+    }
+  }, [workflowId]);
+
   // Load workflow config when component mounts
   useEffect(() => {
     if (location.state?.workflowConfig) {
@@ -33,6 +61,49 @@ export default function WorkflowEditorPage() {
       importWorkflow(nodes, edges);
     }
   }, [location.state, importWorkflow]);
+
+  const fetchWorkflow = async (id: string): Promise<Workflow> => {
+    try {
+      const response = await fetch(`http://localhost:8000/api/workflows/${id}`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data: Workflow = await response.json();
+      return data;
+    } catch (error) {
+      console.error("Error fetching workflow:", error);
+      throw error; // 可以自定义错误处理
+    }
+  };
+
+  // Function to create a new workflow
+  // 定义一个异步函数 createWorkflow，用于创建新的工作流
+  const createWorkflow = async (workflowData: Omit<Workflow, "id">) => {
+    try {
+      // 使用 fetch 发送 POST 请求到指定的 API 端点，以创建新的工作流
+      const response = await fetch("http://localhost:8000/api/workflows/", {
+        method: "POST", // 指定请求方法为 POST
+        headers: {
+          "Content-Type": "application/json", // 设置请求头，指定内容类型为 JSON
+        },
+        body: JSON.stringify(workflowData), // 将工作流数据转换为 JSON 字符串作为请求体
+      });
+
+      // 检查响应状态码，如果不是 2xx 范围，则抛出错误
+      if (!response.ok) {
+        throw new Error("Failed to create workflow");
+      }
+
+      // 解析响应体为 JSON 对象，获取新创建的工作流数据
+      const newWorkflow = await response.json();
+      return newWorkflow.id.toString();
+
+      return newWorkflow;
+    } catch (err) {
+      alert("Failed to create workflow. error: " + err);
+      throw err;
+    }
+  };
 
   const handleCleanRuntimeAndStyle = () => {
     nodes.forEach((node) => {
@@ -56,6 +127,28 @@ export default function WorkflowEditorPage() {
     const jsonString = prepareExportData();
     setExportedJson(jsonString);
     setIsExportModalOpen(true);
+  };
+
+  // Function to update a workflow into db
+  const updateWorkflow = async (id: string, workflowData: Partial<any>) => {
+    try {
+      const response = await fetch(
+        `http://localhost:8000/api/workflows/${id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(workflowData),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to update workflow");
+      }
+    } catch (err) {
+      throw err;
+    }
   };
 
   const handleDownloadWorkflow = () => {
@@ -220,7 +313,33 @@ export default function WorkflowEditorPage() {
             )}
 
             {!isDebugModel && (
-              <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">
+              <button
+                onClick={() => {
+                  const workflowData: Workflow = {
+                    name: workflowName,
+                    updated_at: new Date().toISOString(),
+                    config: {
+                      name: workflowName,
+                      nodes: nodes,
+                      edges: edges,
+                      exportedAt: new Date().toISOString(),
+                    },
+                    id: "",
+                    created_at: "",
+                    exported_at: "",
+                  };
+
+                  if (workflowId) {
+                    updateWorkflow(workflowId, workflowData);
+                  } else {
+                    createWorkflow(workflowData);
+                  }
+                  // const jsonString = JSON.stringify(workflowData, null, 2);
+                  // navigator.clipboard.writeText(jsonString);
+                  alert("Saved...");
+                }}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+              >
                 保存工作流
               </button>
             )}
