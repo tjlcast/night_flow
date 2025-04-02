@@ -24,7 +24,7 @@ class WorkflowDB:
         """创建 workflow 表"""
         query = """
         CREATE TABLE IF NOT EXISTS workflows (
-            id TEXT PRIMARY KEY,
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL,
             config_json TEXT NOT NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -36,14 +36,15 @@ class WorkflowDB:
         self.conn.commit()
 
     def insert_workflow(self, workflow):
-        """插入新 workflow"""
+        """插入新 workflow 并返回新增记录的自增ID"""
         query = """
-        INSERT INTO workflows (id, name, config_json, updated_at, exported_at)
-        VALUES (?, ?, ?, ?, ?)
+        INSERT INTO workflows (name, config_json, updated_at, exported_at)
+        VALUES (?, ?, ?, ?)
         """
         config_json = json.dumps(workflow['config'])
-        self.conn.execute(query, (
-            workflow['id'],
+        cursor = self.conn.cursor()  # 获取游标对象
+
+        cursor.execute(query, (
             workflow['name'],
             config_json,
             workflow['updatedAt'],
@@ -51,10 +52,14 @@ class WorkflowDB:
         ))
         self.conn.commit()
 
-    def get_workflow(self, workflow_id):
+        # 获取最后插入的自增ID
+        new_id = cursor.lastrowid
+        return new_id
+
+    def get_workflow(self, id):
         """获取单个 workflow"""
         query = "SELECT * FROM workflows WHERE id = ?"
-        cursor = self.conn.execute(query, (workflow_id,))
+        cursor = self.conn.execute(query, (id,))
         row = cursor.fetchone()
 
         if row:
@@ -104,10 +109,10 @@ class WorkflowDB:
         ))
         self.conn.commit()
 
-    def delete_workflow(self, workflow_id):
+    def delete_workflow(self, id):
         """删除 workflow"""
         query = "DELETE FROM workflows WHERE id = ?"
-        self.conn.execute(query, (workflow_id,))
+        self.conn.execute(query, (id,))
         self.conn.commit()
 
     def close(self):
@@ -324,11 +329,11 @@ if __name__ == "__main__":
     db = WorkflowDB()
 
     # 1. 插入 workflow
-    db.insert_workflow(example_workflow)
-    print("插入 workflow 成功")
+    id = db.insert_workflow(example_workflow)
+    print(f"插入 workflow 成功. id:{id}")
 
     # 2. 查询单个 workflow
-    workflow = db.get_workflow("1")
+    workflow = db.get_workflow(id)
     print("查询结果:", workflow['name'])
 
     # 3. 更新 workflow
@@ -352,4 +357,5 @@ if __name__ == "__main__":
     with workflow_db() as db:
         workflows = db.get_all_workflows()
         wfs = db.get_all_workflows()
-        db.delete_workflow(wfs[0]["id"])
+        for wf in wfs:
+            db.delete_workflow(wf["id"])

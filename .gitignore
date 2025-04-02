@@ -7,3 +7,5 @@ node_modules/
 docker/dist/*
 docker/machine_manager/*
 docker/workflow_server/*
+
+*.db
