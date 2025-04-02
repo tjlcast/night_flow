@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Plus, Trash2, Edit, Server } from "lucide-react";
+// @ts-ignore
 import { create } from "zustand";
 
 interface Workflow {
@@ -203,7 +204,9 @@ export default function Dashboard() {
     //   },
     // },
   ]);
+  // @ts-ignore
   const [loading, setLoading] = useState(true);
+  // @ts-ignore
   const [error, setError] = useState<string | null>(null);
 
   // load workflow from db
@@ -212,8 +215,10 @@ export default function Dashboard() {
       try {
         setLoading(true);
 
+        const ip = import.meta.env.VITE_WORKFLOW_IP;
+        const port = import.meta.env.VITE_WORKFLOW_PORT;
         // Fetch all workflows
-        const response = await fetch("http://localhost:8000/api/workflows/");
+        const response = await fetch(`http://${ip}:${port}/api/workflows/`);
         if (!response.ok) {
           throw new Error("Failed to fetch workflows");
         }
@@ -397,12 +402,11 @@ export default function Dashboard() {
   // Function to delete a workflow
   const deleteWorkflow = async (id: string) => {
     try {
-      const response = await fetch(
-        `http://localhost:8000/api/workflows/${id}`,
-        {
-          method: "DELETE",
-        }
-      );
+      const ip = import.meta.env.VITE_WORKFLOW_IP;
+      const port = import.meta.env.VITE_WORKFLOW_PORT;
+      const response = await fetch(`http://${ip}:${port}/api/workflows/${id}`, {
+        method: "DELETE",
+      });
 
       if (!response.ok) {
         throw new Error("Failed to delete workflow");

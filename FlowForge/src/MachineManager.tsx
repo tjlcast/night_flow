@@ -36,8 +36,10 @@ export default function MachineManager() {
   const navigate = useNavigate();
 
   // API configuration
-  const API_BASE_URL = "http://localhost:3000/api";
-  const WS_BASE_URL = "ws://localhost:3000/ws";
+  const ip = import.meta.env.VITE_MACHINEMANAGER_IP;
+  const port = import.meta.env.VITE_MACHINEMANAGER_PORT;
+  const API_BASE_URL = `http://${ip}:${port}/api`;
+  const WS_BASE_URL = `ws://${ip}:${port}/ws`;
 
   // Fetch nodes from API
   const fetchNodes = async () => {

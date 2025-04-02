@@ -64,7 +64,9 @@ export default function WorkflowEditorPage() {
 
   const fetchWorkflow = async (id: string): Promise<Workflow> => {
     try {
-      const response = await fetch(`http://localhost:8000/api/workflows/${id}`);
+      const ip = import.meta.env.VITE_WORKFLOW_IP;
+      const port = import.meta.env.VITE_WORKFLOW_PORT;
+      const response = await fetch(`http://${ip}:${port}/api/workflows/${id}`);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -81,7 +83,9 @@ export default function WorkflowEditorPage() {
   const createWorkflow = async (workflowData: Omit<Workflow, "id">) => {
     try {
       // 使用 fetch 发送 POST 请求到指定的 API 端点，以创建新的工作流
-      const response = await fetch("http://localhost:8000/api/workflows/", {
+      const ip = import.meta.env.VITE_WORKFLOW_IP;
+      const port = import.meta.env.VITE_WORKFLOW_PORT;
+      const response = await fetch(`http://${ip}:${port}/api/workflows/`, {
         method: "POST", // 指定请求方法为 POST
         headers: {
           "Content-Type": "application/json", // 设置请求头，指定内容类型为 JSON
@@ -132,16 +136,15 @@ export default function WorkflowEditorPage() {
   // Function to update a workflow into db
   const updateWorkflow = async (id: string, workflowData: Partial<any>) => {
     try {
-      const response = await fetch(
-        `http://localhost:8000/api/workflows/${id}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(workflowData),
-        }
-      );
+      const ip = import.meta.env.VITE_WORKFLOW_IP;
+      const port = import.meta.env.VITE_WORKFLOW_PORT;
+      const response = await fetch(`http://${ip}:${port}/api/workflows/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(workflowData),
+      });
 
       if (!response.ok) {
         throw new Error("Failed to update workflow");

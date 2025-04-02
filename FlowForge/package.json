@@ -5,7 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:hz": "vite --mode hz --open",
     "build": "tsc -b && vite build",
+    "build:hz": "tsc -b && vite build --mode hz",
     "lint": "eslint .",
     "preview": "vite preview"
   },

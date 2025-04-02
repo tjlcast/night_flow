@@ -9,7 +9,9 @@ export class WorkflowWebSocket {
     private onOpenCallback?: () => void,
     private onCloseCallback?: () => void
   ) {
-    this.url = `ws://localhost:8000/workflow/runtime/${workflowId}`;
+    const ip = import.meta.env.VITE_WORKFLOW_IP;
+    const port = import.meta.env.VITE_WORKFLOW_PORT;
+    this.url = `ws://${ip}:${port}/workflow/runtime/${workflowId}`;
     this.messageHandler = () => {};
   }
 
