@@ -51,6 +51,35 @@ export default function WorkflowEditor({ isDebugModel }: WorkflowEditorProps) {
     removeEdge,
   } = useWorkflowStore();
 
+  // 在现有的useEffect键盘事件监听器中添加Ctrl+X处理
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // 处理Delete/Backspace键
+      if (event.key === "Delete" || event.key === "Backspace") {
+        if (selectedEdge) {
+          deleteEdge();
+        } else if (selectedNode) {
+          deleteNode(selectedNode.id);
+        }
+      }
+
+      // 新增：处理Ctrl+X快捷键
+      if (event.ctrlKey && event.key === "x") {
+        event.preventDefault(); // 阻止默认的剪切行为
+        if (selectedEdge) {
+          deleteEdge();
+        } else if (selectedNode) {
+          deleteNode(selectedNode.id);
+        }
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [selectedEdge, selectedNode, removeNode, removeEdge]);
+
   const onConnect = useCallback(
     (params: Connection) => {
       setEdges((eds) =>
@@ -179,7 +208,7 @@ export default function WorkflowEditor({ isDebugModel }: WorkflowEditorProps) {
   // Add keyboard shortcut for deletion
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Delete' || event.key === 'Backspace') {
+      if (event.key === "Delete" || event.key === "Backspace") {
         if (selectedEdge) {
           deleteEdge();
         } else if (selectedNode) {
@@ -188,9 +217,9 @@ export default function WorkflowEditor({ isDebugModel }: WorkflowEditorProps) {
       }
     };
 
-    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener("keydown", handleKeyDown);
     return () => {
-      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener("keydown", handleKeyDown);
     };
   }, [selectedEdge, selectedNode, deleteEdge, deleteNode]);
 
@@ -206,11 +235,11 @@ export default function WorkflowEditor({ isDebugModel }: WorkflowEditorProps) {
                   "url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMiIgaGVpZ2h0PSIzMiIgdmlld0JveD0iMCAwIDMyIDMyIj4KICA8cGF0aCBkPSJNNiA2TDI2IDZMMjYgMjBMMTYgMjBMMTIgMjZMMTIgMjBMNiAyMFoiIGZpbGw9IndoaXRlIiBzdHJva2U9ImJsYWNrIiBzdHJva2Utd2lkdGg9IjMiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz4KPC9zdmc+'), pointer",
               }}
               nodes={nodes}
-              edges={edges.map(edge => ({
+              edges={edges.map((edge) => ({
                 ...edge,
                 style: {
                   ...edge.style,
-                  stroke: selectedEdge?.id === edge.id ? '#ff0072' : '#555',
+                  stroke: selectedEdge?.id === edge.id ? "#ff0072" : "#555",
                   strokeWidth: selectedEdge?.id === edge.id ? 3 : 2,
                 },
               }))}
@@ -248,7 +277,7 @@ export default function WorkflowEditor({ isDebugModel }: WorkflowEditorProps) {
           <div className="w-64 bg-white border-l border-gray-200 p-4 flex flex-col">
             <div className="flex justify-between items-center mb-4">
               <h3 className="font-bold text-lg">Edge Settings</h3>
-              <button 
+              <button
                 onClick={() => setSelectedEdge(null)}
                 className="text-gray-500 hover:text-gray-700"
               >
@@ -257,7 +286,8 @@ export default function WorkflowEditor({ isDebugModel }: WorkflowEditorProps) {
             </div>
             <div className="flex-1">
               <p className="text-sm text-gray-600 mb-2">
-                Connection from <strong>{selectedEdge.source}</strong> to <strong>{selectedEdge.target}</strong>
+                Connection from <strong>{selectedEdge.source}</strong> to{" "}
+                <strong>{selectedEdge.target}</strong>
               </p>
             </div>
             <button
