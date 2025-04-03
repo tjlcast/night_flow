@@ -36,6 +36,18 @@ export default function WorkflowEditor({ isDebugModel }: WorkflowEditorProps) {
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
   const [selectedEdge, setSelectedEdge] = useState<Edge | null>(null);
 
+  // Add a new state to track if mouse is over the flow
+  const [isMouseOverFlowNode, setIsMouseOverFlowNode] = useState(false);
+
+  // Add mouse enter/leave handlers for the flow container
+  const onMouseEnterFlowNode = useCallback(() => {
+    setIsMouseOverFlowNode(true);
+  }, []);
+
+  const onMouseLeaveFlowNode = useCallback(() => {
+    setIsMouseOverFlowNode(false);
+  }, []);
+
   // Get state and actions from store
   const {
     nodes,
@@ -90,6 +102,9 @@ export default function WorkflowEditor({ isDebugModel }: WorkflowEditorProps) {
   // 在现有的useEffect键盘事件监听器中添加Ctrl+X处理
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
+      // Only process if mouse is over the flow node
+      if (!isMouseOverFlowNode) return;
+
       // 处理Delete/Backspace键
       if (event.key === "Delete" || event.key === "Backspace") {
         if (selectedEdge) {
@@ -110,7 +125,11 @@ export default function WorkflowEditor({ isDebugModel }: WorkflowEditorProps) {
       // }
 
       // 处理Ctrl+C快捷键 - 复制节点JSON
-      if (event.ctrlKey && (event.key === "c" || event.key === "C") && selectedNode) {
+      if (
+        event.ctrlKey &&
+        (event.key === "c" || event.key === "C") &&
+        selectedNode
+      ) {
         event.preventDefault();
         setCopiedNode(selectedNode);
         // 复制节点JSON到剪贴板
@@ -157,6 +176,7 @@ export default function WorkflowEditor({ isDebugModel }: WorkflowEditorProps) {
       document.removeEventListener("keydown", handleKeyDown);
     };
   }, [
+    isMouseOverFlowNode,
     selectedEdge,
     selectedNode,
     removeEdge,
@@ -291,24 +311,6 @@ export default function WorkflowEditor({ isDebugModel }: WorkflowEditorProps) {
     }
   }, [selectedEdge, removeEdge]);
 
-  // Add keyboard shortcut for deletion
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Delete" || event.key === "Backspace") {
-        if (selectedEdge) {
-          deleteEdge();
-        } else if (selectedNode) {
-          deleteNode(selectedNode.id);
-        }
-      }
-    };
-
-    document.addEventListener("keydown", handleKeyDown);
-    return () => {
-      document.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [selectedEdge, selectedNode, deleteEdge, deleteNode]);
-
   return (
     <div className="flex h-full">
       {!isDebugModel && <Sidebar />}
@@ -342,7 +344,9 @@ export default function WorkflowEditor({ isDebugModel }: WorkflowEditorProps) {
               nodeTypes={nodeTypes}
               fitView
               snapToGrid
-              deleteKeyCode={["Backspace", "Delete"]}
+              // deleteKeyCode={["Backspace", "Delete"]}
+              onNodeMouseEnter={onMouseEnterFlowNode}
+              onNodeMouseLeave={onMouseLeaveFlowNode}
             >
               <Background />
               <Controls />
