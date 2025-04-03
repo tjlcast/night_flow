@@ -17,6 +17,7 @@ interface WorkflowState {
   onEdgesChange: (changes: EdgeChange[]) => void;
   addNode: (node: Node) => void;
   removeNode: (nodeId: string) => void;
+  removeEdge: (edgeId: string) => void;
   updateNode: (nodeId: string, newData: any) => void;
   updateNodeStyle: (nodeId: string, newData: any) => void;
   importWorkflow: (nodes: Node[], edges: Edge[]) => void;
@@ -58,6 +59,11 @@ export const useWorkflowStore = create<WorkflowState>((set) => ({
       edges: state.edges.filter(
         (edge) => edge.source !== nodeId && edge.target !== nodeId
       ),
+    })),
+
+  removeEdge: (edgeId) =>
+    set((state) => ({
+      edges: state.edges.filter((edge) => edge.id !== edgeId),
     })),
 
   updateNode: (nodeId, newData) =>

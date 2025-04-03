@@ -34,6 +34,7 @@ export default function WorkflowEditor({ isDebugModel }: WorkflowEditorProps) {
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
   const [reactFlowInstance, setReactFlowInstance] = useState<any>(null);
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
+  const [selectedEdge, setSelectedEdge] = useState<Edge | null>(null);
 
   // Get state and actions from store
   const {
@@ -47,6 +48,7 @@ export default function WorkflowEditor({ isDebugModel }: WorkflowEditorProps) {
     addNode,
     removeNode,
     updateNode,
+    removeEdge,
   } = useWorkflowStore();
 
   const onConnect = useCallback(
@@ -57,6 +59,7 @@ export default function WorkflowEditor({ isDebugModel }: WorkflowEditorProps) {
             ...params,
             animated: true,
             style: { stroke: "#555", strokeWidth: 2 },
+            selected: false,
           },
           eds
         )
@@ -120,21 +123,33 @@ export default function WorkflowEditor({ isDebugModel }: WorkflowEditorProps) {
 
   const onNodeClick = useCallback((_: React.MouseEvent, node: Node) => {
     setSelectedNode(node);
+    setSelectedEdge(null); // Clear edge selection when node is clicked
+  }, []);
+
+  const onEdgeClick = useCallback((_: React.MouseEvent, edge: Edge) => {
+    setSelectedEdge(edge);
+    setSelectedNode(null); // Clear node selection when edge is clicked
   }, []);
 
   const onSelectionChange = useCallback(
-    ({ nodes }: OnSelectionChangeParams) => {
+    ({ nodes, edges }: OnSelectionChangeParams) => {
       if (nodes.length === 1) {
         setSelectedNode(nodes[0]);
-      } else if (nodes.length === 0 && selectedNode) {
+        setSelectedEdge(null);
+      } else if (edges.length === 1) {
+        setSelectedEdge(edges[0]);
         setSelectedNode(null);
+      } else if (nodes.length === 0 && edges.length === 0) {
+        setSelectedNode(null);
+        setSelectedEdge(null);
       }
     },
-    [selectedNode]
+    []
   );
 
   const onPaneClick = useCallback(() => {
     setSelectedNode(null);
+    setSelectedEdge(null);
   }, []);
 
   const updateNodeData = useCallback(
@@ -154,6 +169,31 @@ export default function WorkflowEditor({ isDebugModel }: WorkflowEditorProps) {
     [selectedNode, removeNode]
   );
 
+  const deleteEdge = useCallback(() => {
+    if (selectedEdge) {
+      removeEdge(selectedEdge.id);
+      setSelectedEdge(null);
+    }
+  }, [selectedEdge, removeEdge]);
+
+  // Add keyboard shortcut for deletion
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Delete' || event.key === 'Backspace') {
+        if (selectedEdge) {
+          deleteEdge();
+        } else if (selectedNode) {
+          deleteNode(selectedNode.id);
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [selectedEdge, selectedNode, deleteEdge, deleteNode]);
+
   return (
     <div className="flex h-full">
       {!isDebugModel && <Sidebar />}
@@ -166,7 +206,14 @@ export default function WorkflowEditor({ isDebugModel }: WorkflowEditorProps) {
                   "url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMiIgaGVpZ2h0PSIzMiIgdmlld0JveD0iMCAwIDMyIDMyIj4KICA8cGF0aCBkPSJNNiA2TDI2IDZMMjYgMjBMMTYgMjBMMTIgMjZMMTIgMjBMNiAyMFoiIGZpbGw9IndoaXRlIiBzdHJva2U9ImJsYWNrIiBzdHJva2Utd2lkdGg9IjMiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz4KPC9zdmc+'), pointer",
               }}
               nodes={nodes}
-              edges={edges}
+              edges={edges.map(edge => ({
+                ...edge,
+                style: {
+                  ...edge.style,
+                  stroke: selectedEdge?.id === edge.id ? '#ff0072' : '#555',
+                  strokeWidth: selectedEdge?.id === edge.id ? 3 : 2,
+                },
+              }))}
               onNodesChange={onNodesChange}
               onEdgesChange={onEdgesChange}
               onConnect={onConnect}
@@ -174,6 +221,7 @@ export default function WorkflowEditor({ isDebugModel }: WorkflowEditorProps) {
               onDrop={onDrop}
               onDragOver={onDragOver}
               onNodeClick={onNodeClick}
+              onEdgeClick={onEdgeClick}
               onPaneClick={onPaneClick}
               onSelectionChange={onSelectionChange}
               nodeTypes={nodeTypes}
@@ -195,6 +243,30 @@ export default function WorkflowEditor({ isDebugModel }: WorkflowEditorProps) {
             deleteNode={deleteNode}
             onClose={() => setSelectedNode(null)}
           />
+        )}
+        {selectedEdge && (
+          <div className="w-64 bg-white border-l border-gray-200 p-4 flex flex-col">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="font-bold text-lg">Edge Settings</h3>
+              <button 
+                onClick={() => setSelectedEdge(null)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                ×
+              </button>
+            </div>
+            <div className="flex-1">
+              <p className="text-sm text-gray-600 mb-2">
+                Connection from <strong>{selectedEdge.source}</strong> to <strong>{selectedEdge.target}</strong>
+              </p>
+            </div>
+            <button
+              onClick={deleteEdge}
+              className="mt-4 bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded"
+            >
+              Delete Edge
+            </button>
+          </div>
         )}
       </div>
     </div>
