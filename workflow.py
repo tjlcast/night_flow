@@ -314,7 +314,7 @@ class APINode(Node):
             context.record_execution(
                 self.id, "completed", input_data, output_data)
 
-        except RequestException as e:
+        except requests.RequestException as e:
             error_info = {
                 'error': str(e),
                 'request': {
