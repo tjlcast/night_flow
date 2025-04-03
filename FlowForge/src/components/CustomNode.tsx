@@ -164,7 +164,7 @@ const CustomNode = ({ data, selected, id }: NodeProps) => {
 
           {data.runtime?.output && (
             <div className="mt-2 p-2 bg-gray-50 rounded text-xs text-gray-600 border border-gray-200">
-              <div className="font-medium mb-1">AI回复:</div>
+              <div className="font-medium mb-1">Response:</div>
               <div className="whitespace-pre-wrap">
                 {typeof data.runtime.output === "string"
                   ? data.runtime.output.length > 30
