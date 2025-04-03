@@ -51,6 +51,42 @@ export default function WorkflowEditor({ isDebugModel }: WorkflowEditorProps) {
     removeEdge,
   } = useWorkflowStore();
 
+  // 在组件顶部添加新的状态
+  const [copiedNode, setCopiedNode] = useState<Node | null>(null);
+
+  // 提取粘贴逻辑到单独函数
+  const pasteNode = useCallback(
+    (nodeToCopy: Node) => {
+      if (!reactFlowInstance) return;
+
+      nodeToCopy.selected = false;
+
+      // 获取鼠标当前位置作为新节点的位置
+      const position = reactFlowInstance.getViewport();
+      const newNodeId = `node-${nanoid()}`;
+
+      // 创建新节点（深拷贝）
+      const newNode: Node = {
+        ...JSON.parse(JSON.stringify(nodeToCopy)), // 深度复制
+        id: newNodeId,
+        position: {
+          x: nodeToCopy.position.x + 50, // 偏移位置
+          y: nodeToCopy.position.y + 50,
+        },
+        data: {
+          ...nodeToCopy.data,
+          label: nodeToCopy.data.label
+            ? `${nodeToCopy.data.label} (copy)`
+            : nodeToCopy.data.label,
+        },
+      };
+
+      setSelectedNode(null);
+      addNode(newNode);
+    },
+    [reactFlowInstance, addNode]
+  );
+
   // 在现有的useEffect键盘事件监听器中添加Ctrl+X处理
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -63,14 +99,56 @@ export default function WorkflowEditor({ isDebugModel }: WorkflowEditorProps) {
         }
       }
 
-      // 新增：处理Ctrl+X快捷键
-      if (event.ctrlKey && event.key === "x") {
-        event.preventDefault(); // 阻止默认的剪切行为
-        if (selectedEdge) {
-          deleteEdge();
-        } else if (selectedNode) {
-          deleteNode(selectedNode.id);
-        }
+      // // 新增：处理Ctrl+X快捷键
+      // if (event.ctrlKey && event.key === "x") {
+      //   event.preventDefault(); // 阻止默认的剪切行为
+      //   if (selectedEdge) {
+      //     deleteEdge();
+      //   } else if (selectedNode) {
+      //     deleteNode(selectedNode.id);
+      //   }
+      // }
+
+      // 处理Ctrl+C快捷键 - 复制节点JSON
+      if (event.ctrlKey && (event.key === "c" || event.key === "C") && selectedNode) {
+        event.preventDefault();
+        setCopiedNode(selectedNode);
+        // 复制节点JSON到剪贴板
+        navigator.clipboard
+          .writeText(JSON.stringify(selectedNode))
+          .then(() => {
+            console.log("Node copied to clipboard");
+          })
+          .catch((err) => {
+            console.error("Failed to copy node:", err);
+          });
+      }
+
+      // 处理Ctrl+V快捷键 - 粘贴节点
+      if (event.ctrlKey && (event.key === "v" || event.key === "V")) {
+        event.preventDefault();
+
+        // 首先尝试从剪贴板读取节点数据
+        navigator.clipboard
+          .readText()
+          .then((text) => {
+            try {
+              const parsedNode = JSON.parse(text) as Node;
+              if (parsedNode.id && parsedNode.type) {
+                // 基本验证
+                pasteNode(parsedNode);
+              }
+            } catch (e) {
+              console.error("Failed to parse node from clipboard:", e);
+            }
+          })
+          .catch((err) => {
+            console.error("Failed to read clipboard:", err);
+            // 如果剪贴板读取失败，尝试使用内部存储的节点
+            if (copiedNode) {
+              pasteNode(copiedNode);
+            }
+          });
       }
     };
 
@@ -78,7 +156,15 @@ export default function WorkflowEditor({ isDebugModel }: WorkflowEditorProps) {
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [selectedEdge, selectedNode, removeNode, removeEdge]);
+  }, [
+    selectedEdge,
+    selectedNode,
+    removeEdge,
+    removeNode,
+    copiedNode,
+    nodes,
+    addNode,
+  ]);
 
   const onConnect = useCallback(
     (params: Connection) => {
