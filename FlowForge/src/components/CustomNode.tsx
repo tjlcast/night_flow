@@ -30,7 +30,7 @@ const nodeIcons: Record<string, JSX.Element> = {
   llm: <Bot size={20} />,
 };
 
-const CustomNode = ({ data, selected }: NodeProps) => {
+const CustomNode = ({ data, selected, id }: NodeProps) => {
   const icon = nodeIcons[data.type] || <Database size={20} />;
 
   // Default number of outputs for fan-in and inputs for fan-out
@@ -74,6 +74,7 @@ const CustomNode = ({ data, selected }: NodeProps) => {
             {data.label}
           </span>
         </div>
+        <div className="mr-2 text-gray-600">{id}</div>
         {data.action && (
           <div className="text-xs px-2 py-1 bg-gray-100 rounded-md text-gray-600 mt-1">
             {data.action}

@@ -6,6 +6,7 @@ import requests
 from abc import ABC, abstractmethod
 from typing import Dict, Any, Optional, List, Set
 from collections import deque
+from extract_var import ExpressionEvaluateVariablor
 from workflow_utils import parse_string_2_multi
 from multienv import multienv
 
@@ -53,6 +54,9 @@ class Node(ABC):
         self.action = data.get('action', '未配置')
         self.description = data.get('description', '')
         self.next_nodes: List['Node'] = []
+
+    def __execute(self, context: WorkflowContext, input_data: Optional[Any] = None) -> List['Node']:
+        return self.execute(context, input_data)
 
     @abstractmethod
     def execute(self, context: WorkflowContext, input_data: Optional[Any] = None) -> List['Node']:
@@ -181,7 +185,13 @@ class ConditionalNode(Node):
 
     def execute(self, context: WorkflowContext, input_data: Optional[Any] = None) -> List[Node]:
         print(f"执行条件节点 {self.label}，输入: {input_data}，条件: {self.condition}")
-        condition = self.condition
+        org_condition = self.condition
+
+        # 解析条件表达式
+        var_extract = ExpressionEvaluateVariablor(
+            context.execution_history, input_data)
+        condition = var_extract.evaluate(org_condition)
+
         if isinstance(condition, str):
             # 解析条件表达式
             bool_ast = parse_expression(condition)
@@ -440,7 +450,8 @@ class Workflow:
             current_node, current_input = queue.popleft()
 
             # 执行当前节点
-            next_step_nodes = current_node.execute(self.context, current_input)
+            next_step_nodes = current_node.__execute(
+                self.context, current_input)
 
             for next_node in next_step_nodes:
                 if next_node and next_node.id not in visited:
