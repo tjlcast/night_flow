@@ -73,26 +73,31 @@ const CustomNode = ({ data, selected, id }: NodeProps) => {
           <span className="text-sm font-medium text-gray-800">
             {data.label}
           </span>
+          <button
+            className="mr-2 p-1 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded transition-colors"
+            title="复制 id"
+            onClick={() => {
+              navigator.clipboard.writeText(id);
+            }}
+          >
+            <Copy size={16} />
+          </button>
         </div>
-        <div className="mr-2 text-gray-600">{id}</div>
         {data.action && (
           <div className="text-xs px-2 py-1 bg-gray-100 rounded-md text-gray-600 mt-1">
             {data.action}
           </div>
         )}
-
         {data.condition && (
           <div className="text-xs px-2 py-1 bg-blue-50 rounded-md text-blue-600 mt-1 border border-blue-100">
             条件: {data.condition}
           </div>
         )}
-
         {(data.type === "fanIn" || data.type === "fanOut") && (
           <div className="text-xs px-2 py-1 bg-purple-50 rounded-md text-purple-600 mt-1 border border-purple-100">
             并行路径: {data.parallelPaths || 3}
           </div>
         )}
-
         {/* 添加LLM节点的特定信息显示 */}
         {data.type === "llm" && (
           <>
