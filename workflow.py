@@ -268,33 +268,42 @@ class APINode(Node):
         super().__init__(node_id, node_type, data)
         self.method = data.get('method', 'GET').upper()
         self.url = data.get('url', '')
-        self.headers = data.get('headers', {})
-        self.body = data.get('body')
+        self.headers = parse_string_2_multi(data.get('headers', {}))
+        self.body = parse_string_2_multi(data.get('body') or '{}')
         self.timeout = data.get('timeout', 10)  # 默认10秒超时
 
     def execute(self, context: WorkflowContext, input_data: Optional[Any] = None) -> List[Node]:
         print(f"执行API节点 {self.label}，输入: {input_data}")
 
+        var_extract = ExpressionEvaluateVariablor(
+            context.execution_history, input_data)
+
         try:
             # 准备请求参数
+            url = var_extract.evaluate(self.url)
             request_kwargs = {
                 'method': self.method,
-                'url': self.url,
+                'url': url,
                 'headers': self.headers,
                 'timeout': self.timeout
             }
 
             # 添加请求体（如果是POST/PUT/PATCH等方法）
             if self.method in ['POST', 'PUT', 'PATCH', 'DELETE'] and self.body:
+                _body_str = ""
+                body_str = ""
                 if isinstance(self.body, dict):
-                    request_kwargs['json'] = self.body
+                    _body_str = json.dumps(self.body)
                 else:
-                    try:
-                        # 尝试解析字符串形式的JSON
-                        json_body = json.loads(self.body)
-                        request_kwargs['json'] = json_body
-                    except json.JSONDecodeError:
-                        request_kwargs['data'] = self.body
+                    _body_str = self.body
+
+                try:
+                    # 尝试解析字符串形式的JSON
+                    body_str = var_extract.evaluate(_body_str)
+                    json_body = json.loads(body_str)
+                    request_kwargs['json'] = json_body
+                except json.JSONDecodeError as e:
+                    request_kwargs['data'] = self.body
 
             # 执行API请求
             response = requests.request(**request_kwargs)

@@ -53,7 +53,7 @@ export default function NodePanel({
     node.data.url || "http://localhost:8080"
   );
   const [localHeaders, setLocalHeaders] = useState(
-    node.data.headers || { "Content-Type": "application/json" }
+    node.data.headers || JSON.stringify({ "Content-Type": "application/json" })
   );
   const [localBody, setLocalBody] = useState(node.data.body || {});
 
@@ -226,7 +226,7 @@ export default function NodePanel({
                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
               >
                 <option value="CHAT">通用对话</option>
-                <option value="TEXT">文本生成</option>
+                {/* <option value="TEXT">文本生成</option> */}
               </select>
             </div>
 
@@ -373,7 +373,7 @@ export default function NodePanel({
                 请求头
               </label>
               <textarea
-                value={JSON.stringify(localHeaders, null, 2)}
+                value={localHeaders}
                 onChange={(e) => setLocalHeaders(e.target.value)}
                 onBlur={handleSave}
                 placeholder={
@@ -390,7 +390,7 @@ export default function NodePanel({
                   请求体
                 </label>
                 <textarea
-                  value={JSON.stringify(localBody, null, 2)}
+                  value={localBody}
                   onChange={(e) => setLocalBody(e.target.value)}
                   onBlur={handleSave}
                   placeholder={'{\n  "key": "value"\n}'}

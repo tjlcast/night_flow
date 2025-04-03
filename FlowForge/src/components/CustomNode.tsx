@@ -137,18 +137,27 @@ const CustomNode = ({ data, selected, id }: NodeProps) => {
             <div className="mt-2 p-2 bg-gray-50 rounded text-xs text-gray-600 border border-gray-200">
               <div className="font-medium mb-1">请求头:</div>
               <div className="space-y-1">
-                {Object.entries(data.headers).map(([key, value]) => (
-                  <div key={key} className="flex gap-2">
-                    <div className="font-semibold text-gray-700 min-w-[100px]">
-                      {key}:
+                {(() => {
+                  // 检查 data.headers 是否为字符串
+                  const headers =
+                    typeof data.headers === "string"
+                      ? JSON.parse(data.headers) // 如果是字符串，先转换为 JSON 对象
+                      : data.headers; // 否则直接使用
+
+                  // 使用 Object.entries() 遍历 headers
+                  return Object.entries(headers).map(([key, value]) => (
+                    <div key={key} className="flex gap-2">
+                      <div className="font-semibold text-gray-700 min-w-[100px]">
+                        {key}:
+                      </div>
+                      <div className="text-gray-600 break-all">
+                        {typeof value === "string"
+                          ? value
+                          : JSON.stringify(value)}
+                      </div>
                     </div>
-                    <div className="text-gray-600 break-all">
-                      {typeof value === "string"
-                        ? value
-                        : JSON.stringify(value)}
-                    </div>
-                  </div>
-                ))}
+                  ));
+                })()}
               </div>
             </div>
           )}
