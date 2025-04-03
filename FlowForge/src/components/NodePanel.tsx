@@ -2,6 +2,9 @@ import { useState, useEffect } from "react";
 import { Node } from "reactflow";
 import { ChevronDown, ChevronUp, Trash2, X } from "lucide-react";
 
+import { Tooltip } from "@mui/material";
+import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
+
 interface NodePanelProps {
   isDebugModel: boolean;
   node: Node;
@@ -153,6 +156,16 @@ export default function NodePanel({
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               条件表达式
+              <Tooltip
+                title="${input.xxx}上一个执行节点的输出，${context.nodeid.input|output} 已经执行的节点输入输出"
+                placement="top"
+                arrow
+              >
+                <HelpOutlineIcon
+                  fontSize="small"
+                  className="ml-1 text-gray-400 hover:text-gray-600 cursor-help"
+                />
+              </Tooltip>
             </label>
             <input
               type="text"
@@ -357,6 +370,12 @@ export default function NodePanel({
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 请求URL
+                <Tooltip title="支持${xxx}占位符" placement="top" arrow>
+                  <HelpOutlineIcon
+                    fontSize="small"
+                    className="ml-1 text-gray-400 hover:text-gray-600 cursor-help"
+                  />
+                </Tooltip>
               </label>
               <input
                 type="text"
@@ -388,6 +407,12 @@ export default function NodePanel({
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   请求体
+                  <Tooltip title="支持${xxx}占位符" placement="top" arrow>
+                    <HelpOutlineIcon
+                      fontSize="small"
+                      className="ml-1 text-gray-400 hover:text-gray-600 cursor-help"
+                    />
+                  </Tooltip>
                 </label>
                 <textarea
                   value={localBody}
