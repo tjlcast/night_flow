@@ -74,7 +74,6 @@ export default function WorkflowEditor({ isDebugModel }: WorkflowEditorProps) {
       nodeToCopy.selected = false;
 
       // 获取鼠标当前位置作为新节点的位置
-      const position = reactFlowInstance.getViewport();
       const newNodeId = `node-${nanoid()}`;
 
       // 创建新节点（深拷贝）
