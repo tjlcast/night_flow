@@ -350,6 +350,13 @@ export default function WorkflowEditorPage() {
                   };
 
                   try {
+                    workflowData.config.nodes = nodes.map((node) => {
+                      const { runtime, ...restData } = node.data;
+                      return {
+                        ...node,
+                        data: restData,
+                      };
+                    });
                     if (workflowId) {
                       await updateWorkflow(workflowId, workflowData);
                       toast.success("工作流更新成功!", {
