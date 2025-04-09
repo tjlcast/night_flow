@@ -462,6 +462,13 @@ export default function Dashboard() {
               <Plus size={16} className="mr-2" />
               New Workflow
             </Link>
+            <Link
+              to="/document/new"
+              className="flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors"
+            >
+              <Plus size={16} className="mr-2" />
+              New Docuemnt
+            </Link>
             {/* <Link
               to="/workflow/new"
               className="flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors"
