@@ -151,7 +151,6 @@ def init_multienv() -> MultiEnv:
 # 全局实例
 multienv = init_multienv()
 
-
 if __name__ == '__main__':
     # from multienv import multienv
 
@@ -161,5 +160,5 @@ if __name__ == '__main__':
 
     # 获取整个配置字典
     config = multienv.to_dict()
-    print(config)
-    print(multienv.get("HELLO"))
+    print(db_host)
+    print(db_port)

@@ -97,6 +97,7 @@ class TransformNode(Node):
 
 LLM_IP = multienv.get("LLM_IP")
 LLM_PORT = multienv.get("LLM_PORT")
+print(f"LLM host and port: {multienv.get('LLM_IP')}:{multienv.get('LLM_PORT')}")
 
 
 class LLMNode(Node):
