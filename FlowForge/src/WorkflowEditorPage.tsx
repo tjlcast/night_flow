@@ -115,8 +115,8 @@ export default function WorkflowEditorPage() {
 
   const handleCleanRuntimeAndStyle = () => {
     nodes.forEach((node) => {
-      const { runtime, ...cleanData } = node.data;
-      updateNode(node.id, cleanData);
+      // const { runtime, ...cleanData } = node.data;
+      // updateNode(node.id, cleanData);
       updateNodeStyle(node.id, "");
     });
   };
@@ -351,10 +351,10 @@ export default function WorkflowEditorPage() {
 
                   try {
                     workflowData.config.nodes = nodes.map((node) => {
-                      const { runtime, ...restData } = node.data;
+                      // const { runtime, ...restData } = node.data;
                       return {
                         ...node,
-                        data: restData,
+                        data: node.data,
                       };
                     });
                     if (workflowId) {
